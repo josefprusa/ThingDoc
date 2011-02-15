@@ -57,7 +57,7 @@ for root, dirs, files in os.walk(os.getcwd()):
 			f = file(filename)
 			
 			# Debug msg
-			if debug: print "Analazing file: " + filename
+			if debug: print "Analyzing file: " + filename
 			
 			# Thing link
 			link = divide(filename, ".")[0]
