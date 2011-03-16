@@ -80,6 +80,7 @@ for root, dirs, files in os.walk(os.getcwd()):
 					foundThing = Thing()
 					foundThing.category = "Uncategorized"
 					foundThing.link = link
+					foundThing.assembly = []
 				if '@name' in line:
 					#Thing name (-1 = remove nl character)
 					name = line[9:len(line)-1]
@@ -104,7 +105,7 @@ for root, dirs, files in os.walk(os.getcwd()):
 					# Thing link parsing
 					assembly = line[12:len(line)-1]
 					#Append it to things
-					foundThing.assembly = assembly
+					foundThing.assembly.append(assembly)
 					thisLine = "assembly"
 				if ('@category' in line) and (inComment is True):
 					# Thing category
@@ -144,6 +145,9 @@ partsCount = {}
 # List of categories
 categories = [""]
 
+# List of instructions
+assemblyInstructions = []
+
 # Looking for a thing by link if found returns it
 def findThing(thingLink):
 	for thing in things:
@@ -171,6 +175,9 @@ def parseTree(partLink):
 					partsCount[part[0]] = count
 					for i in range(0, part[1]):
 						parseTree(part[0])
+			if not(thing.assembly in assemblyInstructions):
+				for assembly in thing.assembly:
+					assemblyInstructions.append(assembly)
 
 # Parse things from root thing
 parseTree(rootThing)
@@ -247,6 +254,11 @@ for category in [category for category in categories if category != "Uncategoriz
 		for thing in categoryThingList:
 			#print str(partsCount[thing.link]) +"x "+thing.name	
 			output += "- "+str(partsCount[thing.link]) +"x "+thing.name+"\n"
+
+output += "\nAssembly\n++++++++++++++++++++\n"
+for assembly in assemblyInstructions:
+	if(assembly != ""):
+		output += "- "+assembly+"\n"
 
 #print output
 filename = os.getcwd()+"/docs/bom.txt"
