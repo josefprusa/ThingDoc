@@ -179,6 +179,12 @@ def parseTree(partLink):
 # Parse things from root thing
 parseTree(rootThing)
 
+def replaceLinksWithNames(instruction):
+	newInstruction = instruction
+	for thing in things:
+		newInstruction = string.replace(newInstruction, "[" + thing.link + "]", thing.name)
+	return newInstruction
+
 def parseInstructions(partLink):
 	for thing in things:
 		if thing.link == partLink:
@@ -189,13 +195,7 @@ def parseInstructions(partLink):
 					parseInstructions(part[0])
 			instructionCount = len(thing.assembly)
 			if(instructionCount > 0):
-				if(thing.root != True):
-					assemblyInstructions.append("Assemble " +str(partsCount[thing.link]) +"x "+thing.name+":")
-				else:
-					assemblyInstructions.append("Assemble "+thing.name+":")
-				for assembly in thing.assembly:
-					if not(assembly in assemblyInstructions):
-						assemblyInstructions.append("- " + assembly)
+				assemblyInstructions.append(thing)
 
 parseInstructions(rootThing)
 						
@@ -228,6 +228,22 @@ for category in [category for category in categories if category != "Uncategoriz
 		output += "\\end{itemize}\n" 
 output += "\\newpage\n"
 
+#Printing Instructions
+output += "\\section{Assembly Instructions}\n" 
+output += "Instructions to assemble the machine\n" 
+for thing in assemblyInstructions:
+	if(link != ""):
+		count = 1;
+		if(thing.root != True):
+			count = partsCount[thing.link];
+		if(count > 1):
+			output += "\\subsection{Assemble "+str(count) + "x "+thing.name+"}\n\\begin{itemize}\n"
+		else:
+			output += "\\subsection{Assemble "+thing.name+"}\n\\begin{itemize}\n"
+		for instruction in thing.assembly:
+			output += "\\item " + replaceLinksWithNames(instruction) + "\n"
+		output += "\\end{itemize}\n" 
+output += "\\newpage\n"
  
 #Printing things info
 #print "\n\nThings overview \n++++++++++++++++++++++++++\n"
@@ -273,9 +289,14 @@ for category in [category for category in categories if category != "Uncategoriz
 			output += "- "+str(partsCount[thing.link]) +"x "+thing.name+"\n"
 
 output += "\nAssembly\n++++++++++++++++++++\n"
-for assembly in assemblyInstructions:
-	if(assembly != ""):
-		output += assembly+"\n"
+for thing in assemblyInstructions:
+	if(link != ""):
+		count = 1;
+		if(thing.root != True):
+			count = partsCount[thing.link];
+		output += "Assemble " + str(count) + "x "+thing.name+"\n"
+		for instruction in thing.assembly:
+			output += "- " + replaceLinksWithNames(instruction) + "\n"
 
 #print output
 filename = os.getcwd()+"/docs/bom.txt"
