@@ -34,7 +34,7 @@ class Thing:
 		# Description of thing
 		self.description = ""
 		# Assembly info
-		self.assembly = ""
+		self.assembly = []
 		# If thing is soo common
 		self.common = False
 		# Other things which this thing uses
@@ -80,7 +80,6 @@ for root, dirs, files in os.walk(os.getcwd()):
 					foundThing = Thing()
 					foundThing.category = "Uncategorized"
 					foundThing.link = link
-					foundThing.assembly = []
 				if '@name' in line:
 					#Thing name (-1 = remove nl character)
 					name = line[9:len(line)-1]
@@ -145,7 +144,9 @@ partsCount = {}
 # List of categories
 categories = [""]
 
-# List of instructions
+# List of items that have instructions, in an order that is assemblable.
+# - Any part that requires another part should only appear after the required
+#   parts have been output.
 assemblyInstructions = []
 
 # Looking for a thing by link if found returns it
@@ -195,7 +196,8 @@ def parseInstructions(partLink):
 					parseInstructions(part[0])
 			instructionCount = len(thing.assembly)
 			if(instructionCount > 0):
-				assemblyInstructions.append(thing)
+				if not(thing.link in assemblyInstructions):
+					assemblyInstructions.append(thing.link)
 
 parseInstructions(rootThing)
 						
@@ -231,18 +233,18 @@ output += "\\newpage\n"
 #Printing Instructions
 output += "\\section{Assembly Instructions}\n" 
 output += "Instructions to assemble the machine\n" 
-for thing in assemblyInstructions:
-	if(link != ""):
-		count = 1;
-		if(thing.root != True):
-			count = partsCount[thing.link];
-		if(count > 1):
-			output += "\\subsection{Assemble "+str(count) + "x "+thing.name+"}\n\\begin{itemize}\n"
-		else:
-			output += "\\subsection{Assemble "+thing.name+"}\n\\begin{itemize}\n"
-		for instruction in thing.assembly:
-			output += "\\item " + replaceLinksWithNames(instruction) + "\n"
-		output += "\\end{itemize}\n" 
+for link in assemblyInstructions:
+	thing = findThing(link)
+	count = 1;
+	if(thing.root != True):
+		count = partsCount[thing.link];
+	if(count > 1):
+		output += "\\subsection{Assemble "+str(count) + "x "+thing.name+"}\n\\begin{itemize}\n"
+	else:
+		output += "\\subsection{Assemble "+thing.name+"}\n\\begin{itemize}\n"
+	for instruction in thing.assembly:
+		output += "\\item " + replaceLinksWithNames(instruction) + "\n"
+	output += "\\end{itemize}\n" 
 output += "\\newpage\n"
  
 #Printing things info
@@ -289,14 +291,14 @@ for category in [category for category in categories if category != "Uncategoriz
 			output += "- "+str(partsCount[thing.link]) +"x "+thing.name+"\n"
 
 output += "\nAssembly\n++++++++++++++++++++\n"
-for thing in assemblyInstructions:
-	if(link != ""):
-		count = 1;
-		if(thing.root != True):
-			count = partsCount[thing.link];
-		output += "Assemble " + str(count) + "x "+thing.name+"\n"
-		for instruction in thing.assembly:
-			output += "- " + replaceLinksWithNames(instruction) + "\n"
+for link in assemblyInstructions:
+	thing = findThing(link)
+	count = 1;
+	if(thing.root != True):
+		count = partsCount[thing.link];
+	output += "Assemble " + str(count) + "x "+thing.name+"\n"
+	for instruction in thing.assembly:
+		output += "- " + replaceLinksWithNames(instruction) + "\n"
 
 #print output
 filename = os.getcwd()+"/docs/bom.txt"
