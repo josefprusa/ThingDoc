@@ -175,13 +175,30 @@ def parseTree(partLink):
 					partsCount[part[0]] = count
 					for i in range(0, part[1]):
 						parseTree(part[0])
-			if not(thing.assembly in assemblyInstructions):
-				for assembly in thing.assembly:
-					assemblyInstructions.append(assembly)
 
 # Parse things from root thing
 parseTree(rootThing)
 
+def parseInstructions(partLink):
+	for thing in things:
+		if thing.link == partLink:
+			#Check if we have some parts
+			partCount = len(thing.usedParts)
+			if partCount > 0:
+				for part in thing.usedParts:
+					parseInstructions(part[0])
+			instructionCount = len(thing.assembly)
+			if(instructionCount > 0):
+				if(thing.root != True):
+					assemblyInstructions.append("Assemble " +str(partsCount[thing.link]) +"x "+thing.name+":")
+				else:
+					assemblyInstructions.append("Assemble "+thing.name+":")
+				for assembly in thing.assembly:
+					if not(assembly in assemblyInstructions):
+						assemblyInstructions.append("- " + assembly)
+
+parseInstructions(rootThing)
+						
 # Outputting TEX
 
 output = ""
@@ -258,7 +275,7 @@ for category in [category for category in categories if category != "Uncategoriz
 output += "\nAssembly\n++++++++++++++++++++\n"
 for assembly in assemblyInstructions:
 	if(assembly != ""):
-		output += "- "+assembly+"\n"
+		output += assembly+"\n"
 
 #print output
 filename = os.getcwd()+"/docs/bom.txt"
