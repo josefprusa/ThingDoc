@@ -5,7 +5,7 @@
 # GNU GPL v2 or up
  
 # Imports
-import os, fileinput, string, sys
+import os, fileinput, string, sys, re
 
 
 # Devides strings by chosen character
@@ -46,6 +46,17 @@ things = []
 # Link to root thing
 rootThing = "";
 
+# Command parser (insulated against whitespace)
+def parseLine(line):
+	m = re.search("\*\s*\@(\w+)\s(.*)", line)
+	if(m != None):
+		ret = { 'Command': m.group(1), 'Arg': m.group(2) }
+		print ret
+		return ret
+	else:
+		ret = { 'Command': None, 'Arg': None }
+		return ret
+
 # Going thru directory
 for root, dirs, files in os.walk(os.getcwd()):
 	for name in files:
@@ -73,58 +84,64 @@ for root, dirs, files in os.walk(os.getcwd()):
 			lastLine = "regular"
 			for line in f:
 				thisLine = "regular"
+				parsedLine = None
 				
-				if '/**' in line:
-					#Hooray we found comment
-					inComment = True
-					foundThing = Thing()
-					foundThing.category = "Uncategorized"
-					foundThing.link = link
-				if '@name' in line:
-					#Thing name (-1 = remove nl character)
-					name = line[9:len(line)-1]
-					#print name
-					foundThing.name = name.strip()
-					thisLine = "name"
-				if ('@using' in line) and (inComment is True):
-					#Slice the line
-					using = divide(line, " ")
-					#Dig part name
-					partName = using[4][0:len(using[4])-1]
-					#Append it to things
-					foundThing.usedParts.append([str(partName).strip(), int(using[3])])
-					thisLine = "using"
-				if ('@link' in line) and (inComment is True):
-					# Thing link parsing
-					foundLink = line[9:len(line)-1]
-					#Append it to things
-					foundThing.link = foundLink.strip()
-					thisLine = "link"
-				if ('@assembly' in line) and (inComment is True):
-					# Thing link parsing
-					assembly = line[12:len(line)-1]
-					#Append it to things
-					foundThing.assembly.append(assembly)
-					thisLine = "assembly"
-				if ('@category' in line) and (inComment is True):
-					# Thing category
-					category = line[13:len(line)-1]
-					#Append it to things
-					foundThing.category = category
-					thisLine = "category"
-				# Common thing
-				if ('@common' in line) and (inComment is True):
-					#Append it to things
-					foundThing.common = True
-					thisLine = "common"
-				# Root thing
-				if ('@root' in line) and (inComment is True):
-					#Append it to things
-					foundThing.root = True
-					rootThing = link
-					thisLine = "root"
-					#debug msg
-					if debug: print "Found root thing: " + link + "(" + foundThing.name + ")"
+				if inComment is True:
+					parsedLine = parseLine(line)
+					if parsedLine['Command'] == 'name':
+						#Thing name (-1 = remove nl character)
+						name = parsedLine['Arg']
+						#print name
+						foundThing.name = name.strip()
+						thisLine = "name"
+					if parsedLine['Command'] == 'using':
+						#Slice the line
+						using = re.search('(\d)+\s+(.*)', parsedLine['Arg'])
+
+						if(using != None):
+							#Dig part name
+							partName = using.group(2)
+							#Append it to things
+							foundThing.usedParts.append([str(partName).strip(), int(using.group(1))])
+							thisLine = "using"
+					if parsedLine['Command'] == 'link':
+						# Thing link parsing
+						foundLink = parsedLine['Arg']
+						#Append it to things
+						foundThing.link = foundLink.strip()
+						thisLine = "link"
+					if parsedLine['Command'] == 'assembly':
+						# Thing link parsing
+						assembly = parsedLine['Arg']
+						#Append it to things
+						foundThing.assembly.append(assembly)
+						thisLine = "assembly"
+					if parsedLine['Command'] == 'category':
+						# Thing category
+						category = parsedLine['Arg']
+						#Append it to things
+						foundThing.category = category
+						thisLine = "category"
+					# Common thing
+					if parsedLine['Command'] == 'common':
+						#Append it to things
+						foundThing.common = True
+						thisLine = "common"
+					# Root thing
+					if parsedLine['Command'] == 'root':
+						#Append it to things
+						foundThing.root = True
+						rootThing = link
+						thisLine = "root"
+						#debug msg
+						if debug: print "Found root thing: " + link + "(" + foundThing.name + ")"
+				else:
+					if '/**' in line:
+						#Hooray we found comment
+						inComment = True
+						foundThing = Thing()
+						foundThing.category = "Uncategorized"
+						foundThing.link = link
 				# Thing description
 				if (thisLine == "regular") and (lastLine == "regular") and (inComment is True):
 					#Find the string of description
@@ -176,6 +193,11 @@ def parseTree(partLink):
 					partsCount[part[0]] = count
 					for i in range(0, part[1]):
 						parseTree(part[0])
+			instructionCount = len(thing.assembly)
+			if(instructionCount > 0):
+				if not(thing.link in assemblyInstructions):
+					assemblyInstructions.append(thing.link)
+
 
 # Parse things from root thing
 parseTree(rootThing)
@@ -185,21 +207,6 @@ def replaceLinksWithNames(instruction):
 	for thing in things:
 		newInstruction = string.replace(newInstruction, "[" + thing.link + "]", thing.name)
 	return newInstruction
-
-def parseInstructions(partLink):
-	for thing in things:
-		if thing.link == partLink:
-			#Check if we have some parts
-			partCount = len(thing.usedParts)
-			if partCount > 0:
-				for part in thing.usedParts:
-					parseInstructions(part[0])
-			instructionCount = len(thing.assembly)
-			if(instructionCount > 0):
-				if not(thing.link in assemblyInstructions):
-					assemblyInstructions.append(thing.link)
-
-parseInstructions(rootThing)
 						
 # Outputting TEX
 
