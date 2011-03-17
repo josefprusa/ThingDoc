@@ -237,23 +237,6 @@ for category in [category for category in categories if category != "Uncategoriz
 		output += "\\end{itemize}\n" 
 output += "\\newpage\n"
 
-#Printing Instructions
-output += "\\section{Assembly Instructions}\n" 
-output += "Instructions to assemble the machine\n" 
-for link in assemblyInstructions:
-	thing = findThing(link)
-	count = 1;
-	if(thing.root != True):
-		count = partsCount[thing.link];
-	if(count > 1):
-		output += "\\subsection{Assemble "+str(count) + "x "+thing.name+"}\n\\begin{itemize}\n"
-	else:
-		output += "\\subsection{Assemble "+thing.name+"}\n\\begin{itemize}\n"
-	for instruction in thing.assembly:
-		output += "\\item " + replaceLinksWithNames(instruction) + "\n"
-	output += "\\end{itemize}\n" 
-output += "\\newpage\n"
- 
 #Printing things info
 #print "\n\nThings overview \n++++++++++++++++++++++++++\n"
 output += "\\section{Things overview}\n" 
@@ -270,7 +253,25 @@ for link, count in partsCount.iteritems():
 				#print thing.name + "\n======================"\includegraphics{image.png}
 				#print thing.description + "\n"
 				found = True
-				
+
+output += "\\newpage\n"				
+
+#Printing Instructions
+output += "\\section{Assembly Instructions}\n" 
+output += "Instructions to assemble the machine\n" 
+for link in assemblyInstructions:
+	thing = findThing(link)
+	count = 1;
+	if(thing.root != True):
+		count = partsCount[thing.link];
+	if(count > 1):
+		output += "\\subsection{Assemble "+str(count) + "x "+thing.name+"}\n\\begin{itemize}\n"
+	else:
+		output += "\\subsection{Assemble "+thing.name+"}\n\\begin{itemize}\n"
+	for instruction in thing.assembly:
+		output += "\\item " + replaceLinksWithNames(instruction) + "\n"
+	output += "\\end{itemize}\n" 
+
 output += "\\end{document}\n" 			
 #print output
 filename = os.getcwd()+"/docs/doc.tex"
