@@ -50,12 +50,9 @@ rootThing = "";
 def parseLine(line):
 	m = re.search("\*\s*\@(\w+)\s(.*)", line)
 	if(m != None):
-		ret = { 'Command': m.group(1), 'Arg': m.group(2) }
-		print ret
-		return ret
+		return { 'Command': m.group(1), 'Arg': m.group(2) }
 	else:
-		ret = { 'Command': None, 'Arg': None }
-		return ret
+		return { 'Command': None, 'Arg': None }
 
 # Going thru directory
 for root, dirs, files in os.walk(os.getcwd()):
