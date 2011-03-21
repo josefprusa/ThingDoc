@@ -273,7 +273,10 @@ if('--latex' in sys.argv or defaultOutput):
 				if (thing.link == link) and (thing.common == False):
 					output += "\\subsection{"+thing.name+"}\n" 
 					output += thing.description+"\n\n"
-					imgname = "images/"+thing.link+".jpg"
+					if thing.image != "":
+						imgname = "images/"+thing.image
+					else:
+						imgname = "images/"+thing.link+".jpg"
 					if os.path.isfile("docs/"+imgname):
 						output += "\\includegraphics[width=4cm]{"+imgname+"}\n"
 					#print thing.name + "\n======================"\includegraphics{image.png}
@@ -358,7 +361,10 @@ if('--wiki' in sys.argv):
 			output += "=== "+category+" ===\n{| class=\"wikitable sortable\" border=\"1\"\n|-\n! scope=\"col\" | Quantity \n! scope=\"col\" | Description\n! scope=\"col\" | Type\n! scope=\"col\" class=\"unsortable\" | Comments\n! scope=\"col\" class=\"unsortable\" | Diagram\n"
 			for thing in categoryThingList:
 				#print str(partsCount[thing.link]) +"x "+thing.name	
-				output += "|-\n| "+str(partsCount[thing.link]) +" || "+thing.name+" || "+thing.type+" || "+thing.comments+" || "+thing.image+" \n"
+				output += "|-\n| "+str(partsCount[thing.link]) +" || "+thing.name+" || "+thing.type+" || "+thing.comments+" || "
+				if(thing.image != ""):
+					output += "[[File:" + thing.image + "|50px]]"
+				output += "\n"
 			output += "|}\n\n"
 
 	output += "== Assembly ==\n\n"
