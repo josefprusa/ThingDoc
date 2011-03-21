@@ -20,6 +20,8 @@ def latexSafe(string):
 
 # Turns on debug mode	
 debug = False
+if ('--debug' in sys.argv):
+	debug = True
 
 # List of all things
 things = []

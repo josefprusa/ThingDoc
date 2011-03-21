@@ -15,8 +15,9 @@ cd into the folder containing your things. Currently .scad and .tdoc files are s
 run:
 python PATH_TO_THINGDOC/thingdoc.py
 
-you will get a whole lot of output
+if you specify the "--debug" argument, you will get a whole lot of output
 for each file that is read, you will get a recognition statement that it is found and parsed
+
 If you have LaTeX installed you will get a docs/doc.pdf with Complete documentation for all your things.
 
 Optionally, you can specify which files you want to output.  The default is the bom.txt file and the doc.tex file.
