@@ -19,6 +19,17 @@ you will get a whole lot of output
 for each file that is read, you will get a recognition statement that it is found and parsed
 If you have LaTeX installed you will get a docs/doc.pdf with Complete documentation for all your things.
 
+Optionally, you can specify which files you want to output.  The default is the bom.txt file and the doc.tex file.
+
+Print only the bom.txt:
+	python PATH_TO_THINGDOC/thingdoc.py --bom
+Print only the doc.tex:
+	python PATH_TO_THINGDOC/thingdoc.py --latex
+Print only the wiki.txt:
+	python PATH_TO_THINGDOC/thingdoc.py --wiki
+	
+The wiki text is formatted to fit in with the reprap.org wiki.
+	
 *******************
    IS IT MAGIC?
 *******************

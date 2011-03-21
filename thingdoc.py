@@ -19,7 +19,16 @@ def latexSafe(string):
 	return string.replace("&", "\\&")
 
 # Turns on debug mode	
-debug = True
+debug = False
+
+# List of all things
+things = []
+
+# Link to root thing
+rootThing = None
+
+# Dictionary where are stored parts counts (thing link is key)
+partsCount = {}
 
 class Thing:
 	def __init__(self): 
@@ -39,12 +48,29 @@ class Thing:
 		self.common = False
 		# Other things which this thing uses
 		self.usedParts = []
-
-# List of all things
-things = []
-
-# Link to root thing
-rootThing = "";
+		
+	#function to parse the tree (to get part counts and such)
+	def parseTree(self):
+		#print thing.name
+		# Parse categories things etc
+		if not(self.category in categories):
+			categories.append(self.category)
+		#Check if we have some parts
+		partCount = len(self.usedParts)
+		if partCount > 0:
+			for part in self.usedParts:
+				#Count of part
+				count = part[1]
+				#Check if we already has entry, if so, take it and add 1
+				if partsCount.has_key(part[0]):
+					count = partsCount[part[0]]+part[1]
+				partsCount[part[0]] = count
+				for i in range(0, part[1]):
+					findThing(part[0]).parseTree()
+		instructionCount = len(self.assembly)
+		if(instructionCount > 0):
+			if not(self.link in assemblyInstructions):
+				assemblyInstructions.append(self.link)
 
 # Command parser (insulated against whitespace)
 def parseLine(line):
@@ -128,7 +154,7 @@ for root, dirs, files in os.walk(os.getcwd()):
 					if parsedLine['Command'] == 'root':
 						#Append it to things
 						foundThing.root = True
-						rootThing = link
+						rootThing = foundThing
 						thisLine = "root"
 						#debug msg
 						if debug: print "Found root thing: " + link + "(" + foundThing.name + ")"
@@ -142,18 +168,17 @@ for root, dirs, files in os.walk(os.getcwd()):
 				# Thing description
 				if (thisLine == "regular") and (lastLine == "regular") and (inComment is True):
 					#Find the string of description
-					description  = line[3:len(line)-1]
-					foundThing.description = foundThing.description+description
+					descriptionMatch = re.match('[\s]*[\*][\s]*(.*)', line)
+					if(descriptionMatch != None):
+						description  = descriptionMatch.group(1)
+						foundThing.description = foundThing.description+description
 				if ('*/' in line) and (lastLine != "regular"):
 					things.append(foundThing)
 					inComment = False
 				lastLine = thisLine
 				
 	
-print "Starting to analyze parts from " + rootThing
-
-# Dictionary where are stored parts counts (thing link is key)
-partsCount = {}
+print "Starting to analyze parts from " + rootThing.name
 
 # List of categories
 categories = [""]
@@ -169,153 +194,165 @@ def findThing(thingLink):
 		if thing.link == thingLink:
 			return thing
 
-
-# Recursive parser of things
-def parseTree(partLink):
-	for thing in things:
-		if thing.link == partLink:
-			#print thing.name
-			# Parse categories things etc
-			if not(thing.category in categories):
-				categories.append(thing.category)
-			#Check if we have some parts
-			partCount = len(thing.usedParts)
-			if partCount > 0:
-				for part in thing.usedParts:
-					#Count of part
-					count = part[1]
-					#Check if we already has entry, if so, take it and add 1
-					if partsCount.has_key(part[0]):
-						count = partsCount[part[0]]+part[1]
-					partsCount[part[0]] = count
-					for i in range(0, part[1]):
-						parseTree(part[0])
-			instructionCount = len(thing.assembly)
-			if(instructionCount > 0):
-				if not(thing.link in assemblyInstructions):
-					assemblyInstructions.append(thing.link)
-
-
 # Parse things from root thing
-parseTree(rootThing)
+rootThing.parseTree()
 
 def replaceLinksWithNames(instruction):
 	newInstruction = instruction
 	for thing in things:
 		newInstruction = string.replace(newInstruction, "[" + thing.link + "]", thing.name)
 	return newInstruction
-						
-# Outputting TEX
 
-output = ""
-output += "\\documentclass[11pt]{article}\n\\usepackage[latin2]{inputenc}\n\\usepackage{a4wide}\n\\usepackage{graphicx}\n"
-output += "\\title{"+findThing(rootThing).name+" documentation}\n"
-output += "\\author{ThingDOC.py}\n"
-output += "\\begin{document}\n"
-output += "\\maketitle\n"
-output += findThing(rootThing).description+"\n"
-output += "\\newpage\n"
-output += "\\tableofcontents\n"
-output += "\\newpage\n"
+print "Parts analysis complete."
 
-#Printing BOM 
-output += "\\section{Bill of materials}\n" 
-output += "List of things you need to build the machine devided by categories\n" 
-for category in [category for category in categories if category != "Uncategorized"]:
-	categoryThingList = [thing for thing in things if (thing.category == category) and (thing.link in partsCount.keys()) ]
-	#Write something only if category isnt empty
-	if len(categoryThingList) > 0:
-		output += "\\subsection{"+category+"}\n\\begin{itemize}\n" 
-		#print "\n"+category +"\n==================="
-		#Print category items
-		for thing in categoryThingList:
-			#print str(partsCount[thing.link]) +"x "+thing.name	
-			output += "\\item "+str(partsCount[thing.link]) +"x "+thing.name+"\n"
+if('--latex' in sys.argv || len(sys.argv) == 1):	
+	# Outputting TEX
+
+	output = ""
+	output += "\\documentclass[11pt]{article}\n\\usepackage[latin2]{inputenc}\n\\usepackage{a4wide}\n\\usepackage{graphicx}\n"
+	output += "\\title{"+rootThing.name+" documentation}\n"
+	output += "\\author{ThingDOC.py}\n"
+	output += "\\begin{document}\n"
+	output += "\\maketitle\n"
+	output += rootThing.description+"\n"
+	output += "\\newpage\n"
+	output += "\\tableofcontents\n"
+	output += "\\newpage\n"
+
+	#Printing BOM 
+	output += "\\section{Bill of materials}\n" 
+	output += "List of things you need to build the machine devided by categories\n" 
+	for category in [category for category in categories if category != "Uncategorized"]:
+		categoryThingList = [thing for thing in things if (thing.category == category) and (thing.link in partsCount.keys()) ]
+		#Write something only if category isnt empty
+		if len(categoryThingList) > 0:
+			output += "\\subsection{"+category+"}\n\\begin{itemize}\n" 
+			#print "\n"+category +"\n==================="
+			#Print category items
+			for thing in categoryThingList:
+				#print str(partsCount[thing.link]) +"x "+thing.name	
+				output += "\\item "+str(partsCount[thing.link]) +"x "+thing.name+"\n"
+			output += "\\end{itemize}\n" 
+	output += "\\newpage\n"
+
+	#Printing things info
+	#print "\n\nThings overview \n++++++++++++++++++++++++++\n"
+	output += "\\section{Things overview}\n" 
+	output += "List of things and their descriptions\n" 
+	for link, count in partsCount.iteritems():
+		for thing in things:
+			#if thing.category == category:
+				if (thing.link == link) and (thing.common == False):
+					output += "\\subsection{"+thing.name+"}\n" 
+					output += thing.description+"\n\n"
+					imgname = "images/"+thing.link+".jpg"
+					if os.path.isfile("docs/"+imgname):
+						output += "\\includegraphics[width=4cm]{"+imgname+"}\n"
+					#print thing.name + "\n======================"\includegraphics{image.png}
+					#print thing.description + "\n"
+					found = True
+
+	output += "\\newpage\n"				
+
+	#Printing Instructions
+	output += "\\section{Assembly Instructions}\n" 
+	output += "Instructions to assemble the machine\n" 
+	for link in assemblyInstructions:
+		thing = findThing(link)
+		count = 1;
+		if(thing.root != True):
+			count = partsCount[thing.link];
+		if(count > 1):
+			output += "\\subsection{Assemble "+str(count) + "x "+thing.name+"}\n\\begin{itemize}\n"
+		else:
+			output += "\\subsection{Assemble "+thing.name+"}\n\\begin{itemize}\n"
+		for instruction in thing.assembly:
+			output += "\\item " + replaceLinksWithNames(instruction) + "\n"
 		output += "\\end{itemize}\n" 
-output += "\\newpage\n"
 
-#Printing things info
-#print "\n\nThings overview \n++++++++++++++++++++++++++\n"
-output += "\\section{Things overview}\n" 
-output += "List of things and their descriptions\n" 
-for link, count in partsCount.iteritems():
-	for thing in things:
-		#if thing.category == category:
-			if (thing.link == link) and (thing.common == False):
-				output += "\\subsection{"+thing.name+"}\n" 
-				output += thing.description+"\n\n"
-				imgname = "images/"+thing.link+".jpg"
-				if os.path.isfile("docs/"+imgname):
-					output += "\\includegraphics[width=4cm]{"+imgname+"}\n"
-				#print thing.name + "\n======================"\includegraphics{image.png}
-				#print thing.description + "\n"
-				found = True
-
-output += "\\newpage\n"				
-
-#Printing Instructions
-output += "\\section{Assembly Instructions}\n" 
-output += "Instructions to assemble the machine\n" 
-for link in assemblyInstructions:
-	thing = findThing(link)
-	count = 1;
-	if(thing.root != True):
-		count = partsCount[thing.link];
-	if(count > 1):
-		output += "\\subsection{Assemble "+str(count) + "x "+thing.name+"}\n\\begin{itemize}\n"
-	else:
-		output += "\\subsection{Assemble "+thing.name+"}\n\\begin{itemize}\n"
-	for instruction in thing.assembly:
-		output += "\\item " + replaceLinksWithNames(instruction) + "\n"
-	output += "\\end{itemize}\n" 
-
-output += "\\end{document}\n" 			
-#print output
-filename = os.getcwd()+"/docs/doc.tex"
- 
-print "Writing TEX to file: %s" % filename
-  
-file = open(filename, 'w')
- 
-file.write(latexSafe(output))
- 
-file.close()
+	output += "\\end{document}\n" 			
+	#print output
+	filename = os.getcwd()+"/docs/doc.tex"
+	 
+	print "Writing TEX to file: %s" % filename
+	  
+	file = open(filename, 'w')
+	 
+	file.write(latexSafe(output))
+	 
+	file.close()
 
 
-# Outputing TXT BOM
+if('--bom' in sys.argv || len(sys.argv) == 1):
+	# Outputing TXT BOM
 
-#Printing BOM 
-output = findThing(rootThing).name+" bill of materials\n++++++++++++++++++++\n"
-for category in [category for category in categories if category != "Uncategorized"]:
-	categoryThingList = [thing for thing in things if (thing.category == category) and (thing.link in partsCount.keys()) ]
-	#Write something only if category isnt empty
-	if len(categoryThingList) > 0:
-		output += "\n\n"+category+"\n====================\n"
-		for thing in categoryThingList:
-			#print str(partsCount[thing.link]) +"x "+thing.name	
-			output += "- "+str(partsCount[thing.link]) +"x "+thing.name+"\n"
+	#Printing BOM 
+	output = rootThing.name+" bill of materials\n++++++++++++++++++++\n"
+	for category in [category for category in categories if category != "Uncategorized"]:
+		categoryThingList = [thing for thing in things if (thing.category == category) and (thing.link in partsCount.keys()) ]
+		#Write something only if category isnt empty
+		if len(categoryThingList) > 0:
+			output += "\n\n"+category+"\n====================\n"
+			for thing in categoryThingList:
+				#print str(partsCount[thing.link]) +"x "+thing.name	
+				output += "- "+str(partsCount[thing.link]) +"x "+thing.name+"\n"
 
-output += "\nAssembly\n++++++++++++++++++++\n"
-for link in assemblyInstructions:
-	thing = findThing(link)
-	count = 1;
-	if(thing.root != True):
-		count = partsCount[thing.link];
-	output += "Assemble " + str(count) + "x "+thing.name+"\n"
-	for instruction in thing.assembly:
-		output += "- " + replaceLinksWithNames(instruction) + "\n"
+	output += "\nAssembly\n++++++++++++++++++++\n"
+	for link in assemblyInstructions:
+		thing = findThing(link)
+		count = 1;
+		if(thing.root != True):
+			count = partsCount[thing.link];
+		output += "Assemble " + str(count) + "x "+thing.name+"\n"
+		for instruction in thing.assembly:
+			output += "- " + replaceLinksWithNames(instruction) + "\n"
 
-#print output
-filename = os.getcwd()+"/docs/bom.txt"
- 
-print "Writing TXT BOM to file: %s" % filename
-  
-file = open(filename, 'w')
- 
-file.write(output)
- 
-file.close()
+	#print output
+	filename = os.getcwd()+"/docs/bom.txt"
+	 
+	print "Writing TXT BOM to file: %s" % filename
+	  
+	file = open(filename, 'w')
+	 
+	file.write(output)
+	 
+	file.close()
 
+if('--wiki' in sys.argv):
+	# Outputing Wiki
+
+	#Printing Wiki 
+	output = "== Bill of Materials ==\n\n"
+	for category in [category for category in categories if category != "Uncategorized"]:
+		categoryThingList = [thing for thing in things if (thing.category == category) and (thing.link in partsCount.keys()) ]
+		#Write something only if category isnt empty
+		if len(categoryThingList) > 0:
+			output += "=== "+category+" ===\n{| class=\"wikitable sortable\" border=\"1\"\n|-\n! scope=\"col\" | Quantity \n! scope=\"col\" | Description\n! scope=\"col\" | Type\n! scope=\"col\" class=\"unsortable\" | Comments\n! scope=\"col\" class=\"unsortable\" | Diagram\n"
+			for thing in categoryThingList:
+				#print str(partsCount[thing.link]) +"x "+thing.name	
+				output += "|-\n| "+str(partsCount[thing.link]) +" || "+thing.name+" ||  ||  ||  \n"
+			output += "|}\n\n"
+
+	output += "== Assembly ==\n"
+	for link in assemblyInstructions:
+		thing = findThing(link)
+		count = 1;
+		if(thing.root != True):
+			count = partsCount[thing.link];
+		output += "=== Assemble " + str(count) + "x "+thing.name+" ===\n"
+		for instruction in thing.assembly:
+			output += "# " + replaceLinksWithNames(instruction) + "\n"
+
+	#print output
+	filename = os.getcwd()+"/docs/wiki.txt"
+	 
+	print "Writing WIKI to file: %s" % filename
+	  
+	file = open(filename, 'w')
+	 
+	file.write(output)
+	 
+	file.close()
 					
 
 		
