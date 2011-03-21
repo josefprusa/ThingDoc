@@ -50,6 +50,12 @@ class Thing:
 		self.common = False
 		# Other things which this thing uses
 		self.usedParts = []
+		# Type of thing (RP, fastener, etc). More detailed then category
+		self.type = ""
+		# Comments
+		self.comments = ""
+		# Image (if none is specified, latex generation will look for images/link.jpg)
+		self.image = ""
 		
 	#function to parse the tree (to get part counts and such)
 	def parseTree(self):
@@ -147,6 +153,24 @@ for root, dirs, files in os.walk(os.getcwd()):
 						#Append it to things
 						foundThing.category = category
 						thisLine = "category"
+					if parsedLine['Command'] == 'type':
+						# Thing category
+						type = parsedLine['Arg']
+						#Append it to things
+						foundThing.type = type
+						thisLine = "type"
+					if parsedLine['Command'] == 'comments':
+						# Thing category
+						comments = parsedLine['Arg']
+						#Append it to things
+						foundThing.comments += comments
+						thisLine = "comments"
+					if parsedLine['Command'] == 'image':
+						# Thing category
+						image = parsedLine['Arg']
+						#Append it to things
+						foundThing.image += image
+						thisLine = "image"
 					# Common thing
 					if parsedLine['Command'] == 'common':
 						#Append it to things
@@ -334,7 +358,7 @@ if('--wiki' in sys.argv):
 			output += "=== "+category+" ===\n{| class=\"wikitable sortable\" border=\"1\"\n|-\n! scope=\"col\" | Quantity \n! scope=\"col\" | Description\n! scope=\"col\" | Type\n! scope=\"col\" class=\"unsortable\" | Comments\n! scope=\"col\" class=\"unsortable\" | Diagram\n"
 			for thing in categoryThingList:
 				#print str(partsCount[thing.link]) +"x "+thing.name	
-				output += "|-\n| "+str(partsCount[thing.link]) +" || "+thing.name+" ||  ||  ||  \n"
+				output += "|-\n| "+str(partsCount[thing.link]) +" || "+thing.name+" || "+thing.type+" || "+thing.comments+" || "+thing.image+" \n"
 			output += "|}\n\n"
 
 	output += "== Assembly ==\n\n"
