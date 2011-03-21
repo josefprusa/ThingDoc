@@ -207,7 +207,9 @@ def replaceLinksWithNames(instruction):
 
 print "Parts analysis complete."
 
-if('--latex' in sys.argv || len(sys.argv) == 1):	
+defaultOutput = (('--latex' in sys.argv or '--bom' in sys.argv or '--wiki' in sys.argv) != True)
+
+if('--latex' in sys.argv or defaultOutput):	
 	# Outputting TEX
 
 	output = ""
@@ -285,7 +287,7 @@ if('--latex' in sys.argv || len(sys.argv) == 1):
 	file.close()
 
 
-if('--bom' in sys.argv || len(sys.argv) == 1):
+if('--bom' in sys.argv or defaultOutput):
 	# Outputing TXT BOM
 
 	#Printing BOM 
@@ -335,7 +337,7 @@ if('--wiki' in sys.argv):
 				output += "|-\n| "+str(partsCount[thing.link]) +" || "+thing.name+" ||  ||  ||  \n"
 			output += "|}\n\n"
 
-	output += "== Assembly ==\n"
+	output += "== Assembly ==\n\n"
 	for link in assemblyInstructions:
 		thing = findThing(link)
 		count = 1;
@@ -344,6 +346,7 @@ if('--wiki' in sys.argv):
 		output += "=== Assemble " + str(count) + "x "+thing.name+" ===\n"
 		for instruction in thing.assembly:
 			output += "# " + replaceLinksWithNames(instruction) + "\n"
+		output += "\n"
 
 	#print output
 	filename = os.getcwd()+"/docs/wiki.txt"
