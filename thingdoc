@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# ThingDOC - things comment parser - http://thingdoc.org/
+# ThingDoc - things comment parser - http://thingdoc.org/
 # Copyright (C) 2011 Josef Prusa <iam@josefprusa.cz>
 # Copyright (C) 2011 Pavol Rusnak <stick@gk2.sk>
 #
@@ -72,7 +72,7 @@ class Thing:
 		self.comments = ""
 		# Image (if none is specified, latex generation will look for images/link.jpg)
 		self.image = ""
-		
+
 	#function to parse the tree (to get part counts and such)
 	def parseTree(self):
 		#print thing.name
@@ -110,23 +110,23 @@ def parseLine(line):
 for root, dirs, files in os.walk(os.getcwd()):
 	for name in files:
 		filename = os.path.join(root, name)
-		
+
 		# We take only two kinds of files
 		if (name.endswith(".scad") or name.endswith(".tdoc")):
 			# Active file
 			f = file(filename)
-			
+
 			# Debug msg
 			if debug: print "Analyzing file: " + filename
-			
+
 			# Thing link
 			link = divide(filename, ".")[0]
 			link = divide(link, "/")
 			link = link[len(link)-1]
-			
+
 			# Debug msg
 			if debug: print "Automagically found thing link: " + link
-			
+
 			# Variable which tells us if we are in comment
 			inComment = False
 			# Set some extra variables
@@ -134,7 +134,7 @@ for root, dirs, files in os.walk(os.getcwd()):
 			for line in f:
 				thisLine = "regular"
 				parsedLine = None
-				
+
 				if inComment is True:
 					parsedLine = parseLine(line)
 					if parsedLine['Command'] == 'name':
@@ -220,8 +220,8 @@ for root, dirs, files in os.walk(os.getcwd()):
 					things.append(foundThing)
 					inComment = False
 				lastLine = thisLine
-				
-	
+
+
 print "Starting to analyze parts from " + rootThing.name
 
 # List of categories
@@ -323,13 +323,13 @@ if('--latex' in sys.argv or defaultOutput):
 	output += "\\end{document}\n" 			
 	#print output
 	filename = os.getcwd()+"/docs/doc.tex"
-	 
+
 	print "Writing TEX to file: %s" % filename
-	  
+
 	file = open(filename, 'w')
-	 
+
 	file.write(latexSafe(output))
-	 
+
 	file.close()
 
 
@@ -359,13 +359,13 @@ if('--bom' in sys.argv or defaultOutput):
 
 	#print output
 	filename = os.getcwd()+"/docs/bom.txt"
-	 
+
 	print "Writing TXT BOM to file: %s" % filename
-	  
+
 	file = open(filename, 'w')
-	 
+
 	file.write(output)
-	 
+
 	file.close()
 
 if('--wiki' in sys.argv):
@@ -399,17 +399,11 @@ if('--wiki' in sys.argv):
 
 	#print output
 	filename = os.getcwd()+"/docs/wiki.txt"
-	 
+
 	print "Writing WIKI to file: %s" % filename
-	  
+
 	file = open(filename, 'w')
-	 
+
 	file.write(output)
-	 
+
 	file.close()
-					
-
-		
-
-
-
