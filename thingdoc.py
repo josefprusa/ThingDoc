@@ -73,8 +73,10 @@ class Thing:
 				if partsCount.has_key(part[0]):
 					count = partsCount[part[0]]+part[1]
 				partsCount[part[0]] = count
-				for i in range(0, part[1]):
-					findThing(part[0]).parseTree()
+				thing = findThing(part[0])
+				if thing:
+					for i in range(0, part[1]):
+						thing.parseTree()
 		instructionCount = len(self.assembly)
 		if(instructionCount > 0):
 			if not(self.link in assemblyInstructions):
@@ -219,6 +221,7 @@ def findThing(thingLink):
 	for thing in things:
 		if thing.link == thingLink:
 			return thing
+	print 'ERROR: Thing %s not found!' % thingLink
 
 # Parse things from root thing
 rootThing.parseTree()
