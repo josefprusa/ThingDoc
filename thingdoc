@@ -131,7 +131,7 @@ def main():
 
 	parser = optparse.OptionParser(
 		version = '%prog ' + VERSION,
-		epilog = 'If none of --bom, --tex, --wiki are provided then all 3 types are generated.')
+		epilog = 'If none of --bom, --html, --tex, --wiki are provided then all 4 types are generated.')
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'doc', help = 'use OUTDIR as output directory ("doc" by default)', metavar = 'OUTDIR')
 	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = "generate Bill of Materials")
