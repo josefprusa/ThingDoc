@@ -56,12 +56,12 @@ def process_file(absname, things):
 		linenum += 1
 		if line.startswith('/**'):
 			if thing:
-				print 'ERROR:   * Found start of the ThingDoc comment (/**) but the previous is still open (%s:%d) ' % (absname, linenum)
+				print 'ERROR:   * Found start of the comment (/**) but the previous one is still open (%s:%d) ' % (absname, linenum)
 			thing = Thing()
 			continue
 		if line.startswith(' */'):
 			if not thing:
-				print 'ERROR:   * Found end of the ThingDoc comment ( */) but there is no previous open one (%s:%d) ' % (absname, linenum)
+				print 'ERROR:   * Found end of the comment ( */) but there is no previous open one (%s:%d) ' % (absname, linenum)
 				continue
 			if thing.id != None:
 				if things.has_key(thing.id):
@@ -75,7 +75,7 @@ def process_file(absname, things):
 		if not thing:
 			continue  # not in a comment
 		if not line.startswith(' * '):
-			print 'ERROR:   * ThingDoc comment does not start with a " * " (%s:%d)' % (absname, linenum)
+			print 'ERROR:   * Comment line does not start with a " * " (%s:%d)' % (absname, linenum)
 			continue
 		(key, _, value) = line[3:].strip().partition(' ')
 		if   key == '@id':
