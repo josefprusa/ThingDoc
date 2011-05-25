@@ -70,7 +70,10 @@ def process_file(absname, things):
 					things[ thing.id ] = thing
 			thing = None
 			continue
-		if not thing or not line.startswith(' * '):
+		if not thing:
+			continue  # not in a comment
+		if not line.startswith(' * '):
+			print 'ERROR:   * ThingDoc comment does not start with a " * " (%s:%d)' % (absname, linenum)
 			continue
 		(key, _, value) = line[3:].strip().partition(' ')
 		if   key == '@id':
