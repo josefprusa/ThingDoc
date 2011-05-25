@@ -48,26 +48,41 @@ class ThingDocTree:
 
 def generate_bom(tree):
 
-	print 'INFO: Generating Bill of Materials ...'
+	print 'INFO:  Generating Bill of Materials'
 
 
 def generate_html(tree):
 
-	print 'INFO: Generating HTML documentation ...'
+	print 'INFO:  Generating HTML documentation'
 
 
 def generate_tex(tree):
 
-	print 'INFO: Generating TeX documentation ...'
+	print 'INFO:  Generating TeX documentation'
 
 
 def generate_wiki(tree):
 
-	print 'INFO: Generating Wiki documentation ...'
+	print 'INFO:  Generating Wiki documentation'
 
+
+def process_file(f):
+	isDoc = False
+	for line in f:
+		if line.startswith('/*'):
+			isDoc = True
+			continue
+		if line.startswith(' */'):
+			isDoc = False
+			continue
+		if not isDoc:
+			continue
+		print line.split(' ')
+	return (None, None)
 
 def generate_tree(indir):
 
+	print 'INFO:  Generating ThingDoc tree'
 	for root, dirs, files in os.walk(os.path.abspath(indir)):
 		dirs[:] = [d for d in dirs if not d.startswith('.')]
 		for name in files:
@@ -75,8 +90,12 @@ def generate_tree(indir):
 			if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
 				continue
 			absname = os.path.join(root, name)
-			# TODO: process absname
-
+			try:
+				f = open(absname, 'r')
+				(things, deps) = process_file(f)
+				print 'INFO:    * Processed file %s' % name
+			except:
+				print 'ERROR:   * Processing file %s failed' % name
 
 def main():
 
@@ -115,7 +134,7 @@ def main():
 	if options.wiki:
 		generate_wiki(tree)
 
-	print 'INFO: Finished!'
+	print 'INFO:  Finished!'
 
 
 main()
