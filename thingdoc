@@ -34,6 +34,7 @@ class Thing:
 		self.category = ''      # category of the thing
 		self.type = ''          # type of the thing (more detailed than category, e.g. RP, fastener, etc)
 		self.assembly = []      # assembly instructions
+		self.since = ''         # since when does the thing exist (can be YYYY-MM-DD or some tag, e.g. "Mendel")
 		self.comment = []       # comments
 		self.image = None       # if none is specified then images/{id}.jpg is used
 		self.using = []         # list of dependencies (their {id}s)
@@ -67,6 +68,8 @@ def process_file(f, things):
 			thing.common = True
 		elif key == '@assembled':
 			thing.assembled = True
+		elif key == '@since':
+			thing.since = value
 		elif key == '@category':
 			thing.category = value
 		elif key == '@type':
