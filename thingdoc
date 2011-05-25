@@ -3,7 +3,7 @@
 # ThingDoc - things comment parser - http://thingdoc.org/
 # Copyright (C) 2011 Josef Prusa <iam@josefprusa.cz>
 # Copyright (C) 2011 Pavol Rusnak <stick@gk2.sk>
-# See file AUTHORS for contributors
+# See the file AUTHORS for all contributions
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,19 +23,47 @@ VERSION = '1.0'
 import optparse
 import os
 
+
+class Thing:
+
+	def __init__(self):
+		self.id = ''         # unique id
+		self.name = ''       # name of the thing
+		self.root = False    # is this root?
+		self.category = ''   # category of the thing
+		self.desc = ''       # description of the thing
+		self.assembly = []   # assembly instructions
+		self.common = False  # is this thing common?
+		self.type = ''       # type of the thing (more detailed than category, e.g. RP, fastener, etc)
+		self.comments = ''   # comments
+		self.image = None    # if none is specified then images/@id.jpg is used
+
+
+class ThingDocTree:
+
+	def __init__(self):
+		self.things = {}
+		self.deps = {}
+
+
 def generate_bom(tree):
 
-	pass
+	print 'INFO: Generating Bill of Materials ...'
+
+
+def generate_html(tree):
+
+	print 'INFO: Generating HTML documentation ...'
 
 
 def generate_tex(tree):
 
-	pass
+	print 'INFO: Generating TeX documentation ...'
 
 
 def generate_wiki(tree):
 
-	pass
+	print 'INFO: Generating Wiki documentation ...'
 
 
 def generate_tree(indir):
@@ -58,13 +86,14 @@ def main():
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'doc', help = 'use OUTDIR as output directory ("doc" by default)', metavar = 'OUTDIR')
 	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = "generate Bill of Materials")
-	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = "generate Tex documentation")
+	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = "generate HTML (markup) documentation")
+	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = "generate TeX documentation")
 	parser.add_option('-w', '--wiki', action = 'store_true', dest = 'wiki', default = False, help = "generate Wiki documentation")
 
 	(options, _) = parser.parse_args()
 
-	if not options.bom and not options.tex and not options.wiki:
-		options.bom = options.tex = options.wiki = True
+	if not options.bom and not options.html and not options.tex and not options.wiki:
+		options.bom = options.html = options.tex = options.wiki = True
 
 	tree = generate_tree(options.indir)
 
@@ -79,12 +108,14 @@ def main():
 
 	if options.bom:
 		generate_bom(tree)
+	if options.html:
+		generate_html(tree)
 	if options.tex:
 		generate_tex(tree)
 	if options.wiki:
 		generate_wiki(tree)
 
-	print 'INFO: Done!'
+	print 'INFO: Finished!'
 
 
 main()
