@@ -100,10 +100,10 @@ def generate_tree(indir):
 			absname = os.path.join(root, name)
 			try:
 				f = open(absname, 'r')
+				print 'INFO:    * Processing file %s' % name
 				process_file(f, things)
-				print 'INFO:    * Processed file %s' % name
-			except:
-				print 'ERROR:   * Cannot process file %s' % name
+			except IOError:
+				print 'ERROR:   * Cannot open file %s' % name
 	return things
 
 
