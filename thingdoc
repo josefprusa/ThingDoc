@@ -68,6 +68,8 @@ def process_file(absname, things):
 					print 'ERROR:   * Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum)
 				else:
 					things[ thing.id ] = thing
+			else:
+				print 'ERROR:   * Missing mandatory attribute @id (%s:%d)' % (absname, linenum)
 			thing = None
 			continue
 		if not thing:
