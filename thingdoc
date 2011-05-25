@@ -41,16 +41,31 @@ class Thing:
 		self.desc = []          # description of the thing
 
 
-def process_file(f, things):
+def process_file(absname, things):
+
+	try:
+		f = open(absname, 'r')
+	except IOError:
+		print 'ERROR:   * Cannot open file %s' % absname
+		return
+
+	print 'INFO:    * Processing file %s' % absname
 	thing = None
+	linenum = 0
 	for line in f:
+		linenum += 1
 		if line.startswith('/**'):
+			if thing:
+				print 'ERROR:   * Found start of the ThingDoc comment (/**) but the previous is still open (%s:%d) ' % (absname, linenum)
 			thing = Thing()
 			continue
 		if line.startswith(' */'):
+			if not thing:
+				print 'ERROR:   * Found end of the ThingDoc comment ( */) but there is no previous open one (%s:%d) ' % (absname, linenum)
+				continue
 			if thing.id != None:
 				if things.has_key(thing.id):
-					print 'ERROR:   * Duplicate thing id: %s' % thing.id
+					print 'ERROR:   * Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum)
 				else:
 					things[ thing.id ] = thing
 			thing = None
@@ -85,6 +100,7 @@ def process_file(f, things):
 			thing.using.append( (int(cnt), id) )
 		else:
 			thing.desc.append(key + ' ' + value)
+	f.close()
 
 
 def generate_tree(indir):
@@ -98,12 +114,7 @@ def generate_tree(indir):
 			if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
 				continue
 			absname = os.path.join(root, name)
-			try:
-				f = open(absname, 'r')
-				print 'INFO:    * Processing file %s' % name
-				process_file(f, things)
-			except IOError:
-				print 'ERROR:   * Cannot open file %s' % name
+			process_file(absname, things)
 	return things
 
 
