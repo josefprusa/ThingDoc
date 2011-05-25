@@ -28,7 +28,7 @@ class Thing:
 
 	def __init__(self):
 		self.id = None          # unique id, root has id = 0 (numeric) which cannot be overriden
-		self.name = ''          # name of the thing
+		self.name = None        # name of the thing
 		self.common = False     # is this thing common?
 		self.assembled = False  # is this thing assembled?
 		self.category = ''      # category of the thing
@@ -63,6 +63,8 @@ def process_file(absname, things):
 			if not thing:
 				print 'ERROR:   * Found end of the comment ( */) but there is no previous open one (%s:%d) ' % (absname, linenum)
 				continue
+			if thing.name == None:
+				print 'ERROR:   * Missing mandatory attribute @name (%s:%d)' % (absname, linenum)
 			if thing.id != None:
 				if things.has_key(thing.id):
 					print 'ERROR:   * Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum)
