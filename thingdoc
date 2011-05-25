@@ -27,23 +27,81 @@ import os
 class Thing:
 
 	def __init__(self):
-		self.id = ''         # unique id
-		self.name = ''       # name of the thing
-		self.root = False    # is this root?
-		self.category = ''   # category of the thing
-		self.desc = ''       # description of the thing
-		self.assembly = []   # assembly instructions
-		self.common = False  # is this thing common?
-		self.type = ''       # type of the thing (more detailed than category, e.g. RP, fastener, etc)
-		self.comments = ''   # comments
-		self.image = None    # if none is specified then images/@id.jpg is used
+		self.id = None          # unique id, root has id = 0 (numeric) which cannot be overriden
+		self.name = ''          # name of the thing
+		self.common = False     # is this thing common?
+		self.assembled = False  # is this thing assembled?
+		self.category = ''      # category of the thing
+		self.type = ''          # type of the thing (more detailed than category, e.g. RP, fastener, etc)
+		self.assembly = []      # assembly instructions
+		self.comment = []       # comments
+		self.image = None       # if none is specified then images/{id}.jpg is used
+		self.using = []         # list of dependencies (their {id}s)
+		self.desc = []          # description of the thing
 
 
-class ThingDocTree:
+def process_file(f, things):
+	thing = None
+	for line in f:
+		if line.startswith('/**'):
+			thing = Thing()
+			continue
+		if line.startswith(' */'):
+			if thing.id != None:
+				if things.has_key(thing.id):
+					print 'ERROR:   * Duplicate thing id: %s' % thing.id
+				else:
+					things[ thing.id ] = thing
+			thing = None
+			continue
+		if not thing or not line.startswith(' * '):
+			continue
+		(key, _, value) = line[3:].strip().partition(' ')
+		if   key == '@id':
+			thing.id = value
+		elif key == '@name':
+			thing.name = value
+		elif key == '@root':
+			thing.id = 0
+		elif key == '@common':
+			thing.common = True
+		elif key == '@assembled':
+			thing.assembled = True
+		elif key == '@category':
+			thing.category = value
+		elif key == '@type':
+			thing.type = value
+		elif key == '@assembly':
+			thing.assembly.append(value)
+		elif key == '@comment':
+			thing.comment.append(value)
+		elif key == '@image':
+			thing.image = value
+		elif key == '@using':
+			(cnt, _, id) = value.partition(' ')
+			thing.using.append( (int(cnt), id) )
+		else:
+			thing.desc.append(key + ' ' + value)
 
-	def __init__(self):
-		self.things = {}
-		self.deps = {}
+
+def generate_tree(indir):
+
+	print 'INFO:  Generating ThingDoc tree'
+	things = {}
+	for root, dirs, files in os.walk(os.path.abspath(indir)):
+		dirs[:] = [d for d in dirs if not d.startswith('.')]
+		for name in files:
+			# skip if the file is not supported document
+			if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
+				continue
+			absname = os.path.join(root, name)
+			try:
+				f = open(absname, 'r')
+				process_file(f, things)
+				print 'INFO:    * Processed file %s' % name
+			except:
+				print 'ERROR:   * Cannot process file %s' % name
+	return things
 
 
 def generate_bom(tree):
@@ -65,37 +123,6 @@ def generate_wiki(tree):
 
 	print 'INFO:  Generating Wiki documentation'
 
-
-def process_file(f):
-	isDoc = False
-	for line in f:
-		if line.startswith('/*'):
-			isDoc = True
-			continue
-		if line.startswith(' */'):
-			isDoc = False
-			continue
-		if not isDoc:
-			continue
-		print line.split(' ')
-	return (None, None)
-
-def generate_tree(indir):
-
-	print 'INFO:  Generating ThingDoc tree'
-	for root, dirs, files in os.walk(os.path.abspath(indir)):
-		dirs[:] = [d for d in dirs if not d.startswith('.')]
-		for name in files:
-			# skip if the file is not ThingDoc document
-			if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
-				continue
-			absname = os.path.join(root, name)
-			try:
-				f = open(absname, 'r')
-				(things, deps) = process_file(f)
-				print 'INFO:    * Processed file %s' % name
-			except:
-				print 'ERROR:   * Processing file %s failed' % name
 
 def main():
 
