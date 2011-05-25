@@ -23,13 +23,6 @@ import string
 import sys
 import re
 
-
-# Devides strings by chosen character
-def divide(string, divs):
-    for d in divs[1:]:
-        string = string.replace(d, divs[0])
-    return string.split(divs[0])
-
 # Makes output safe fo LaTeX
 def latexSafe(string):
 	return string.replace("&", "\\&")
@@ -120,9 +113,7 @@ for root, dirs, files in os.walk(os.getcwd()):
 			if debug: print "Analyzing file: " + filename
 
 			# Thing link
-			link = divide(filename, ".")[0]
-			link = divide(link, "/")
-			link = link[len(link)-1]
+			links = os.path.splitext(os.path.split(filename)[1])[0]
 
 			# Debug msg
 			if debug: print "Automagically found thing link: " + link
