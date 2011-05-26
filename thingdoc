@@ -22,7 +22,7 @@ VERSION = '1.0'
 
 import optparse
 import os
-
+import sys
 
 class Thing:
 
@@ -38,7 +38,22 @@ class Thing:
 		self.comment = []       # comments
 		self.image = None       # if none is specified then images/{id}.jpg is used
 		self.using = []         # list of dependencies (their {id}s)
+		self.price = None       # price of the thing (in $)
+		self.weight = None      # weight of the thing (in grams)
 		self.desc = []          # description of the thing
+
+
+def warning(string):
+	print >> sys.stderr, 'Warning:', string
+
+
+def error(string):
+	print >> sys.stderr, 'Error:', string
+
+
+def fatal(string):
+	print >> sys.stderr, 'Fatal:', string
+	sys.exit(1)
 
 
 def process_file(absname, things):
@@ -46,38 +61,36 @@ def process_file(absname, things):
 	try:
 		f = open(absname, 'r')
 	except IOError:
-		print 'ERROR:   * Cannot open file %s' % absname
-		return
+		fatal('Cannot open file %s' % absname)
 
-	print 'INFO:    * Processing file %s' % absname
 	thing = None
 	linenum = 0
 	for line in f:
 		linenum += 1
 		if line.startswith('/**'):
 			if thing:
-				print 'ERROR:   * Found start of the comment (/**) but the previous one is still open (%s:%d) ' % (absname, linenum)
+				error('Start of the comment (/**) found but the previous one is still open (%s:%d)' % (absname, linenum))
 			thing = Thing()
 			continue
 		if line.startswith(' */'):
 			if not thing:
-				print 'ERROR:   * Found end of the comment ( */) but there is no previous open one (%s:%d) ' % (absname, linenum)
+				error('End of the comment ( */) found but there is no previous open one (%s:%d)' % (absname, linenum))
 				continue
-			if thing.name == None:
-				print 'ERROR:   * Missing mandatory attribute @name (%s:%d)' % (absname, linenum)
-			if thing.id != None:
+			if not thing.id:
+				error('Missing mandatory attribute @id (%s:%d)' % (absname, linenum))
+			if not thing.name:
+				error('Missing mandatory attribute @name (%s:%d)' % (absname, linenum))
+			if thing.id and thing.name:
 				if things.has_key(thing.id):
-					print 'ERROR:   * Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum)
+					error('Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum))
 				else:
 					things[ thing.id ] = thing
-			else:
-				print 'ERROR:   * Missing mandatory attribute @id (%s:%d)' % (absname, linenum)
 			thing = None
 			continue
 		if not thing:
 			continue  # not in a comment
 		if not line.startswith(' * '):
-			print 'ERROR:   * Comment line does not start with a " * " (%s:%d)' % (absname, linenum)
+			error('Comment line does not start with a " * " (%s:%d)' % (absname, linenum))
 			continue
 		(key, _, value) = line[3:].strip().partition(' ')
 		if   key == '@id':
@@ -85,7 +98,7 @@ def process_file(absname, things):
 		elif key == '@name':
 			thing.name = value
 		elif key == '@root':
-			thing.id = 0
+			thing.id = 1
 		elif key == '@common':
 			thing.common = True
 		elif key == '@assembled':
@@ -105,6 +118,10 @@ def process_file(absname, things):
 		elif key == '@using':
 			(cnt, _, id) = value.partition(' ')
 			thing.using.append( (int(cnt), id) )
+		elif key == '@price':
+			thing.price = float(value)
+		elif key == '@weight':
+			thing.weight = float(value)
 		else:
 			thing.desc.append(key + ' ' + value)
 	f.close()
@@ -112,7 +129,6 @@ def process_file(absname, things):
 
 def generate_tree(indir):
 
-	print 'INFO:  Generating ThingDoc tree'
 	things = {}
 	for root, dirs, files in os.walk(os.path.abspath(indir)):
 		dirs[:] = [d for d in dirs if not d.startswith('.')]
@@ -125,24 +141,58 @@ def generate_tree(indir):
 	return things
 
 
+def check_tree(tree):
+
+	valid = True
+
+	if not tree.has_key(1):
+		fatal('Nothing was declared as @root')
+
+	# use BFS to detect cycles and undefined things
+	visited = []
+	queue = [1]
+	last = 1
+	while queue:
+		thing = queue.pop()
+		if not thing in tree.iterkeys():
+			error("Thing '%s' requires thing '%s' which is not defined" % (last == 1 and '@root' or last, thing))
+			valid = False
+			last = thing
+			continue
+		if not thing in visited:
+			visited.append(thing)
+			queue += map(lambda x: x[1], tree[thing].using)
+		else:
+			error("Thing '%s' requires thing '%s' what creates cycle" % (last == 1 and '@root' or last, thing))
+			valid = False
+		last = thing
+	# detect unused things
+	for thing in tree.iterkeys():
+		if not thing in visited:
+			warning("Thing '%s' is defined but unused" % thing)
+
+	if not valid:
+		fatal('Tree validation failed, see errors above')
+
+
 def generate_bom(tree):
 
-	print 'INFO:  Generating Bill of Materials'
+	pass
 
 
 def generate_html(tree):
 
-	print 'INFO:  Generating HTML documentation'
+	pass
 
 
 def generate_tex(tree):
 
-	print 'INFO:  Generating TeX documentation'
+	pass
 
 
 def generate_wiki(tree):
 
-	print 'INFO:  Generating Wiki documentation'
+	pass
 
 
 def main():
@@ -171,7 +221,9 @@ def main():
 	try:
 		os.chdir(options.outdir)
 	except:
-		print 'ERROR: Cannot switch to OUTDIR: %s' % options.outdir
+		fatal('Cannot switch to OUTDIR: %s' % options.outdir)
+
+	check_tree(tree)
 
 	if options.bom:
 		generate_bom(tree)
@@ -182,7 +234,8 @@ def main():
 	if options.wiki:
 		generate_wiki(tree)
 
-	print 'INFO:  Finished!'
+	print 'All Done!'
 
 
-main()
+if __name__ == '__main__':
+	main()
