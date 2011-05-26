@@ -82,7 +82,10 @@ def process_file(absname, things):
 				error('Missing mandatory attribute @name (%s:%d)' % (absname, linenum))
 			if thing.id and thing.name:
 				if things.has_key(thing.id):
-					error('Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum))
+					if thing.id == 1:
+						fatal('More than one @root detected!')
+					else:
+						error('Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum))
 				else:
 					things[ thing.id ] = thing
 			thing = None
@@ -117,7 +120,10 @@ def process_file(absname, things):
 			thing.image = value
 		elif key == '@using':
 			(cnt, _, id) = value.partition(' ')
-			thing.using.append( (int(cnt), id) )
+			try:
+				thing.using.append( (int(cnt), id) )
+			except:
+				error('Correct form of @using is: @using count idname (%s:%d)' % (absname, linenum))
 		elif key == '@price':
 			thing.price = float(value)
 		elif key == '@weight':
@@ -143,33 +149,60 @@ def generate_tree(indir):
 
 def check_tree(tree):
 
-	valid = True
-
 	if not tree.has_key(1):
 		fatal('Nothing was declared as @root')
 
-	# use BFS to detect cycles and undefined things
-	visited = []
+	# do BFS on dependency graph
+	used = []
+	missing = []
 	queue = [1]
-	last = 1
 	while queue:
 		thing = queue.pop()
 		if not thing in tree.iterkeys():
-			error("Thing '%s' requires thing '%s' which is not defined" % (last == 1 and '@root' or last, thing))
-			valid = False
-			last = thing
+			if not thing in missing:
+				missing.append(thing)
 			continue
-		if not thing in visited:
-			visited.append(thing)
+		if not thing in used:
+			used.append(thing)
 			queue += map(lambda x: x[1], tree[thing].using)
-		else:
-			error("Thing '%s' requires thing '%s' what creates cycle" % (last == 1 and '@root' or last, thing))
-			valid = False
-		last = thing
-	# detect unused things
+
+	# handle unused things
 	for thing in tree.iterkeys():
-		if not thing in visited:
+		if not thing in used:
 			warning("Thing '%s' is defined but unused" % thing)
+
+	valid = True
+
+	# handle undefined things
+	for thing in missing:
+		parents = []
+		for k, v in tree.iteritems():
+			if thing in map(lambda x: x[1], v.using):
+				parents.append(k == 1 and '@root' or ("'" + k + "'"))
+		parents.sort()
+		error("Thing '%s' is not defined and required by: %s" % (thing, ', '.join(parents)))
+		valid = False
+
+	# detect oriented cycles
+	todo = tree.keys()
+	while todo:
+		node = todo.pop()
+		stack = [node]
+		while stack:
+			top = stack[-1]
+			for node in map(lambda x: x[1], tree[top].using):
+				if node in stack:
+					error("Oriented cycle detected: '%s'" % ("' -> '".join(stack[stack.index(node):] + [node])))
+					valid = False
+					todo = []
+					stack = []
+					break
+				if node in todo:
+					stack.append(node)
+					todo.remove(node)
+					break
+			else:
+				node = stack.pop()
 
 	if not valid:
 		fatal('Tree validation failed, see errors above')
