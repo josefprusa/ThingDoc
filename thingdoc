@@ -85,7 +85,7 @@ def process_file(absname, things):
 					if thing.id == 1:
 						fatal('More than one @root detected!')
 					else:
-						error('Duplicate thing id: %s (%s:%d)' % (thing.id, absname, linenum))
+						error("Duplicate thing id: '%s' (%s:%d)" % (thing.id, absname, linenum))
 				else:
 					things[ thing.id ] = thing
 			thing = None
@@ -121,9 +121,11 @@ def process_file(absname, things):
 		elif key == '@using':
 			(cnt, _, id) = value.partition(' ')
 			try:
-				thing.using.append( (int(cnt), id) )
+				cnt = int(cnt)
 			except:
-				error('Correct form of @using is: @using count idname (%s:%d)' % (absname, linenum))
+				id = cnt
+				cnt = 1
+			thing.using.append( (cnt, id) )
 		elif key == '@price':
 			thing.price = float(value)
 		elif key == '@weight':
@@ -208,6 +210,18 @@ def check_tree(tree):
 		fatal('Tree validation failed, see errors above')
 
 
+def print_tree(tree):
+
+	queue = [(0,1,-1)]
+	while queue:
+		(cnt, id, level) = queue.pop(0)
+		if id == 1:
+			print '@root'
+		else:
+			print level * '  ', '-', str(cnt) + 'x', tree[id].id, '(' + tree[id].name + ')'
+		queue = map(lambda x: (x[0], x[1], level + 1), tree[id].using) + queue
+
+
 def generate_bom(tree):
 
 	pass
@@ -239,6 +253,7 @@ def main():
 	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = "generate HTML (markup) documentation")
 	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = "generate TeX documentation")
 	parser.add_option('-w', '--wiki', action = 'store_true', dest = 'wiki', default = False, help = "generate Wiki documentation")
+	parser.add_option('-p', '--print', action = 'store_true', dest = 'tree', default = False, help = "print tree of things and exit")
 
 	(options, _) = parser.parse_args()
 
@@ -257,6 +272,10 @@ def main():
 		fatal('Cannot switch to OUTDIR: %s' % options.outdir)
 
 	check_tree(tree)
+
+	if options.tree:
+		print_tree(tree)
+		return
 
 	if options.bom:
 		generate_bom(tree)
