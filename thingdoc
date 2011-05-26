@@ -212,14 +212,34 @@ def check_tree(tree):
 
 def print_tree(tree):
 
-	queue = [(0,1,-1)]
+	queue = [(0, 1, -1)]
 	while queue:
 		(cnt, id, level) = queue.pop(0)
 		if id == 1:
-			print '@root'
+			print '@root', '(' + tree[id].name + ')'
 		else:
 			print level * '  ', '-', str(cnt) + 'x', tree[id].id, '(' + tree[id].name + ')'
 		queue = map(lambda x: (x[0], x[1], level + 1), tree[id].using) + queue
+
+
+def graphviz_tree(tree):
+
+	print 'digraph thingdoc {'
+	print '\tnode [color=lightblue, style=filled];'
+	print '\tedge [dir=back];'
+	queue = [(0, 1, ['!'])]
+	while queue:
+		(cnt, id, path) = queue.pop(0)
+		if id == 1:
+			print '\t"!"[label="%s"];' % tree[id].name
+		else:
+			name = tree[id].name
+			if cnt > 1:
+				name = '%dx %s' % (cnt, name)
+			print '\t"%s"[label="%s"];' % ('/'.join(path), name)
+			print '\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path))
+		queue = map(lambda x: (x[0], x[1], path + [x[1]]), tree[id].using) + queue
+	print '}'
 
 
 def generate_bom(tree):
@@ -249,11 +269,12 @@ def main():
 		epilog = 'If none of --bom, --html, --tex, --wiki are provided then all 4 types are generated.')
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'doc', help = 'use OUTDIR as output directory ("doc" by default)', metavar = 'OUTDIR')
-	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = "generate Bill of Materials")
-	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = "generate HTML (markup) documentation")
-	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = "generate TeX documentation")
-	parser.add_option('-w', '--wiki', action = 'store_true', dest = 'wiki', default = False, help = "generate Wiki documentation")
-	parser.add_option('-p', '--print', action = 'store_true', dest = 'tree', default = False, help = "print tree of things and exit")
+	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = 'generate Bill of Materials')
+	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = 'generate HTML (markup) documentation')
+	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = 'generate TeX documentation')
+	parser.add_option('-w', '--wiki', action = 'store_true', dest = 'wiki', default = False, help = 'generate Wiki documentation')
+	parser.add_option('-p', '--print', action = 'store_true', dest = 'tree', default = False, help = 'print tree of things and exit (text mode)')
+	parser.add_option('-g', '--graph', action = 'store_true', dest = 'graphviz', default = False, help = 'generate graphviz document')
 
 	(options, _) = parser.parse_args()
 
@@ -275,6 +296,10 @@ def main():
 
 	if options.tree:
 		print_tree(tree)
+		return
+
+	if options.graphviz:
+		graphviz_tree(tree)
 		return
 
 	if options.bom:
