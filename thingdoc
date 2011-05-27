@@ -36,7 +36,7 @@ class Thing:
 		self.assembly = []      # assembly instructions
 		self.since = ''         # since when does the thing exist (can be YYYY-MM-DD or some tag, e.g. "Mendel")
 		self.comment = []       # comments
-		self.image = None       # if none is specified then images/{id}.jpg is used
+		self.image = None       # thing image (filename with extension)
 		self.using = []         # list of dependencies (their {id}s)
 		self.price = None       # price of the thing (in $)
 		self.weight = None      # weight of the thing (in grams)
@@ -395,7 +395,7 @@ def generate_tex(tree):
 \\newpage
 """ % cleanup_tex((tree[1].name, '\n'.join(tree[1].desc))))
 
-	# print BoM
+	# print BOM
 	f.write('\\section{Bill of materials}\n')
 	f.write('List of things you need to build the machine divided by categories\n')
 	queue = [ tree[1].using  ]
