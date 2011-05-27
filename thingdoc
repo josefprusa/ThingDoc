@@ -249,6 +249,7 @@ def generate_bom(tree):
 	except:
 		error('Cannot create bom.txt')
 		return
+
 	f.write('Bill of Materials: %s\n' % tree[1].name)
 	f.write((len(tree[1].name) + 19) * '+' + '\n\n')
 	queue = [ tree[1].using  ]
@@ -282,6 +283,7 @@ def generate_html(tree):
 	except:
 		error('Cannot create thingdoc.html')
 		return
+
 	f.write('''<html>
   <head>
     <title>ThingDoc: %s</title>
@@ -328,6 +330,7 @@ def generate_wiki(tree):
 	except:
 		error('Cannot create thingdoc.wiki')
 		return
+
 	f.write('== Bill of Materials ==\n')
 	queue = [ tree[1].using  ]
 	bom = {}
@@ -345,17 +348,73 @@ def generate_wiki(tree):
 					bom[tree[id].category] = {}
 			queue += [ tree[id].using ]
 	for category in bom:
-		f.write("=== %s ===\n{| class=\"wikitable sortable\" border=\"1\"\n|-\n! scope=\"col\" | Quantity\n! scope=\"col\" | Description\n! scope=\"col\" | Type\n! scope=\"col\" class=\"unsortable\" | Comments\n! scope=\"col\" class=\"unsortable\" | Diagram\n" % category)
+		f.write('=== %s ===\n{| class="wikitable sortable" border="1"\n|-\n! scope="col" | Quantity\n! scope="col" | Description\n! scope="col" | Type\n! scope="col" class="unsortable" | Comments\n! scope="col" class="unsortable" | Diagram\n' % category)
 		for k, v in bom[category].iteritems():
 			img = tree[k].image and ' [[File:%s|50px]]' % tree[k].image or ''
-			f.write("|-\n| %d || %s || %s || %s ||%s\n" % (v, tree[k].name, tree[k].type, '; '.join(tree[k].comment), img))
+			f.write('|-\n| %d || %s || %s || %s ||%s\n' % (v, tree[k].name, tree[k].type, '; '.join(tree[k].comment), img))
 		f.write('|}\n')
 	f.close()
 
 
 def generate_tex(tree):
 
-	pass
+	try:
+		f = open('thingdoc.tex', 'w')
+	except:
+		error('Cannot create thingdoc.tex')
+		return
+
+	f.write("""\\documentclass[11pt]{article}
+\\usepackage[latin2]{inputenc}
+\\usepackage{a4wide}
+\\usepackage{graphicx}
+\\title{%s" documentation}
+\\author{ThingDoc.org}
+\\begin{document}
+\\maketitle
+%s
+\\newpage
+\\tableofcontents
+\\newpage
+""" % (tree[1].name, '\n'.join(tree[1].desc)))
+
+	# print BoM
+	f.write('\\section{Bill of materials}\n')
+	f.write('List of things you need to build the machine divided by categories\n')
+	queue = [ tree[1].using  ]
+	bom = {}
+	while queue:
+		using = queue.pop(0)
+		for (cnt, id) in using:
+			if tree[id].category in bom:
+				bomcat = bom[tree[id].category]
+				if id in bomcat:
+					bomcat[id] += cnt
+				else:
+					bomcat[id] = cnt
+			else:
+				if tree[id].category:
+					bom[tree[id].category] = {}
+			queue += [ tree[id].using ]
+	for category in bom:
+		f.write('\\subsection{%s}\n\\begin{itemize}\n' % category)
+		for k, v in bom[category].iteritems():
+			f.write('\\item %dx %s\n' % (v, tree[k].name))
+		f.write('\\end{itemize}\n')
+	f.write('\\newpage\n')
+
+	# print Things info
+	f.write('\\section{Things overview}\n')
+	f.write('List of things and their descriptions\n')
+	for thing in tree.itervalues():
+		if thing.id != 1 and thing.common == False:
+			f.write('\\subsection{%s}\n' % thing.name)
+			f.write('\n'.join(thing.desc) + '\n')
+			if thing.image:
+				f.write('\\includegraphics[width=4cm]{%s}\n' % thing.image)
+	f.write('\\newpage\n')
+
+	f.write('\\end{document}\n')
 
 
 def main():
