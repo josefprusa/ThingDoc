@@ -1,74 +1,11 @@
-*******************
- What is ThingDoc?
-*******************
-ThingDOC is a clever things comment parser
-It generates a BOM and hopefully full documentation in near future :-)
-A BOM is a Build of Materials. This is the "what you'll need" info sheet with each thing you need tabulated and organized.
+ThingDoc is a clever things comment parser.
 
-*******************
- HOW DO I USE IT?
-*******************
-The workflow is as follows:
-To run thingdoc:
-cd into the folder containing your things. Currently .scad and .tdoc files are supported
+It uses syntax similar to JavaDoc and is able to generate:
 
-run:
-python PATH_TO_THINGDOC/thingdoc.py
+  * BoM text file
+  * HTML documentation
+  * TeX documentation
+  * Wiki documentation (suitable for the reprap.org wiki)
+  * Dependency tree in text-mode and using GraphViz
 
-if you specify the "--debug" argument, you will get a whole lot of output
-for each file that is read, you will get a recognition statement that it is found and parsed
-
-If you have LaTeX installed you will get a docs/doc.pdf with Complete documentation for all your things.
-
-Optionally, you can specify which files you want to output.  The default is the bom.txt file and the doc.tex file.
-
-Print only the bom.txt:
-	python PATH_TO_THINGDOC/thingdoc.py --bom
-Print only the doc.tex:
-	python PATH_TO_THINGDOC/thingdoc.py --latex
-Print only the wiki.txt:
-	python PATH_TO_THINGDOC/thingdoc.py --wiki
-	
-The wiki text is formatted to fit in with the reprap.org wiki.
-	
-*******************
-   IS IT MAGIC?
-*******************
-Yes, it is magic.
-
-*******************
- HOW DOES IT WORK?
-*******************
-Thingdoc identifies long comments in your things. The will start with:
-/**
-and end with:
-*/
-
-The first line in the comments sets the description of the thing.
-
-within each set of comments, there are keywords. Keyword always starts with "@"
-several keywords are supported:
-@name sets the name of the thing
-@link sets the link to the thing
-@assembly tells us the assembly instructions for the thing
-@assembled tells us that this thing is made up of other things, and so it won't be shown in BOM and etc.
-@category sets the category of the thing, like "Printed" to tell you you will need to print this thing
-@root in large things that are made up of many smaller things, this is the topmost parent thing
-@using sets the dependency between things. parent things use child things.
-@common thing soo common it won't be shown in things reviews etc. but will be shown in BOM. you can probably find these things in a local hardware store.
-
-*******************
-   TELL ME MORE
-*******************
-More details on some keywords:
-@name
-Simply the name of the thing * @name M8 nut
-
-@link
-Unique url style link to the thing. Automagically is generated from the filename where comment was found by removing file extension. You can rewrite it by using this keyword * @link m8nut
-
-**********************
- WHO IS TEH AWESOME?
-**********************
-Thingdoc was conceived of and is being developed by Josef Prusa. It is currently running as the documentation engine for the RepRap Prusa Mendel. See: http://github.com/prusajr/PrusaMendel for more awesometown.
-
+For more information check our wiki at: http://thinkdoc.org/
