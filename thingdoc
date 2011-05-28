@@ -244,16 +244,8 @@ def graphviz_tree(tree):
 	print '}'
 
 
-def generate_bom(tree):
+def extract_bom(tree):
 
-	try:
-		f = open('bom.txt', 'w')
-	except:
-		error('Cannot create bom.txt')
-		return
-
-	f.write('Bill of Materials: %s\n' % tree[1].name)
-	f.write((len(tree[1].name) + 19) * '+' + '\n\n')
 	queue = [ tree[1].using  ]
 	bom = {}
 	while queue:
@@ -269,6 +261,17 @@ def generate_bom(tree):
 				if tree[id].category:
 					bom[tree[id].category] = {}
 			queue += [ tree[id].using ]
+	return bom
+
+def generate_bom(tree, bom):
+
+	try:
+		f = open('bom.txt', 'w')
+	except:
+		error('Cannot create bom.txt')
+		return
+	f.write('Bill of Materials: %s\n' % tree[1].name)
+	f.write((len(tree[1].name) + 19) * '+' + '\n\n')
 	for category in bom:
 		f.write(category + '\n')
 		f.write(len(category) * '=' + '\n')
@@ -286,7 +289,7 @@ def cleanup_html(string):
 		return string.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
-def generate_html(tree):
+def generate_html(tree, bom):
 
 	try:
 		f = open('thingdoc.html', 'w')
@@ -305,21 +308,6 @@ def generate_html(tree):
 ''' % cleanup_html((tree[1].name, tree[1].name))
 	)
 	f.write('    <h2>Bill of Materials</h2>\n\n')
-	queue = [ tree[1].using  ]
-	bom = {}
-	while queue:
-		using = queue.pop(0)
-		for (cnt, id) in using:
-			if tree[id].category in bom:
-				bomcat = bom[tree[id].category]
-				if id in bomcat:
-					bomcat[id] += cnt
-				else:
-					bomcat[id] = cnt
-			else:
-				if tree[id].category:
-					bom[tree[id].category] = {}
-			queue += [ tree[id].using ]
 	for category in bom:
 		f.write('    <h3>%s</h3>\n' % cleanup_html(category))
 		f.write('    <ul>\n')
@@ -333,7 +321,7 @@ def generate_html(tree):
 	f.close()
 
 
-def generate_wiki(tree):
+def generate_wiki(tree, bom):
 
 	try:
 		f = open('thingdoc.wiki', 'w')
@@ -342,21 +330,6 @@ def generate_wiki(tree):
 		return
 
 	f.write('== Bill of Materials ==\n')
-	queue = [ tree[1].using  ]
-	bom = {}
-	while queue:
-		using = queue.pop(0)
-		for (cnt, id) in using:
-			if tree[id].category in bom:
-				bomcat = bom[tree[id].category]
-				if id in bomcat:
-					bomcat[id] += cnt
-				else:
-					bomcat[id] = cnt
-			else:
-				if tree[id].category:
-					bom[tree[id].category] = {}
-			queue += [ tree[id].using ]
 	for category in bom:
 		f.write('=== %s ===\n{| class="wikitable sortable" border="1"\n|-\n! scope="col" | Quantity\n! scope="col" | Description\n! scope="col" | Type\n! scope="col" class="unsortable" | Comments\n! scope="col" class="unsortable" | Diagram\n' % category)
 		for k, v in bom[category].iteritems():
@@ -373,7 +346,7 @@ def cleanup_tex(string):
 		return string.replace('&', '\\&')
 
 
-def generate_tex(tree):
+def generate_tex(tree, bom):
 
 	try:
 		f = open('thingdoc.tex', 'w')
@@ -398,21 +371,6 @@ def generate_tex(tree):
 	# print BOM
 	f.write('\\section{Bill of materials}\n')
 	f.write('List of things you need to build the machine divided by categories\n')
-	queue = [ tree[1].using  ]
-	bom = {}
-	while queue:
-		using = queue.pop(0)
-		for (cnt, id) in using:
-			if tree[id].category in bom:
-				bomcat = bom[tree[id].category]
-				if id in bomcat:
-					bomcat[id] += cnt
-				else:
-					bomcat[id] = cnt
-			else:
-				if tree[id].category:
-					bom[tree[id].category] = {}
-			queue += [ tree[id].using ]
 	for category in bom:
 		f.write('\\subsection{%s}\n\\begin{itemize}\n' % cleanup_tex(category))
 		for k, v in bom[category].iteritems():
@@ -474,14 +432,15 @@ def main():
 		graphviz_tree(tree)
 		return
 
+	bom = extract_bom(tree)
 	if options.bom:
-		generate_bom(tree)
+		generate_bom(tree, bom)
 	if options.html:
-		generate_html(tree)
+		generate_html(tree, bom)
 	if options.tex:
-		generate_tex(tree)
+		generate_tex(tree, bom)
 	if options.wiki:
-		generate_wiki(tree)
+		generate_wiki(tree, bom)
 
 	print 'All Done!'
 
