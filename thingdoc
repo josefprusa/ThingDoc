@@ -33,13 +33,14 @@ class Thing:
 		self.assembled = False  # is this thing assembled?
 		self.category = ''      # category of the thing
 		self.type = ''          # type of the thing (more detailed than category, e.g. RP, fastener, etc)
-		self.assembly = []      # assembly instructions
+		self.step = []          # assembly instructions (aka steps)
 		self.since = ''         # since when does the thing exist (can be YYYY-MM-DD or some tag, e.g. "Mendel")
 		self.comment = []       # comments
 		self.image = None       # thing image (filename with extension)
 		self.using = []         # list of dependencies (their {id}s)
-		self.price = None       # price of the thing (in $)
-		self.weight = None      # weight of the thing (in grams)
+		self.price = None       # price of the thing (in $) - experimental
+		self.weight = None      # weight of the thing (in grams) - experimental
+		self.time = None        # how long does it take to complete the part (in minutes) - experimental
 		self.desc = []          # description of the thing
 
 
@@ -112,8 +113,8 @@ def process_file(absname, things):
 			thing.category = value
 		elif key == '@type':
 			thing.type = value
-		elif key == '@assembly':
-			thing.assembly.append(value)
+		elif key == '@step':
+			thing.step.append(value)
 		elif key == '@comment':
 			thing.comment.append(value)
 		elif key == '@image':
@@ -130,6 +131,8 @@ def process_file(absname, things):
 			thing.price = float(value)
 		elif key == '@weight':
 			thing.weight = float(value)
+		elif key == '@time':
+			thing.weight = float(time)
 		elif key.startswith('@'):
 			error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
 		else:
@@ -276,8 +279,8 @@ def extract_instructions(tree, id):
 	instr = []
 	for (_, cid) in tree[id].using:
 		instr += extract_instructions(tree, cid)
-	if tree[id].assembly:
-		instr.append( ['Assemble ' + tree[id].name] + tree[id].assembly )
+	if tree[id].step:
+		instr.append( ['Assemble ' + tree[id].name] + tree[id].step )
 	return instr
 
 
