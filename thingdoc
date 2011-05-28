@@ -224,21 +224,28 @@ def print_tree(tree):
 		queue = map(lambda x: (x[0], x[1], level + 1), tree[id].using) + queue
 
 
-def graphviz_tree(tree):
+def graphviz_tree(tree, bom):
 
 	print 'digraph thingdoc {'
-	print '\tnode [color=lightblue, style=filled];'
+	print '\tnode [style=filled, colorscheme=pastel19];'
 	print '\tedge [dir=back];'
 	queue = [(0, 1, ['!'])]
 	while queue:
 		(cnt, id, path) = queue.pop(0)
 		if id == 1:
-			print '\t"!"[label="%s"];' % tree[id].name
+			print '\t"!"[label="%s", fillcolor=9];' % tree[id].name
 		else:
 			name = tree[id].name
 			if cnt > 1:
 				name = '%dx %s' % (cnt, name)
-			print '\t"%s"[label="%s"];' % ('/'.join(path), name)
+			if tree[id].common:
+				color = 1
+			elif not tree[id].category:
+				color = 8
+			else:
+				i = bom.keys().index(tree[id].category)
+				color = (i % 6) + 2 # 2-7
+			print '\t"%s"[label="%s", fillcolor=%d];' % ('/'.join(path), name, color)
 			print '\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path))
 		queue = map(lambda x: (x[0], x[1], path + [x[1]]), tree[id].using) + queue
 	print '}'
@@ -424,15 +431,16 @@ def main():
 
 	check_tree(tree)
 
+	bom = extract_bom(tree)
+
 	if options.tree:
 		print_tree(tree)
 		return
 
 	if options.graphviz:
-		graphviz_tree(tree)
+		graphviz_tree(tree, bom)
 		return
 
-	bom = extract_bom(tree)
 	if options.bom:
 		generate_bom(tree, bom)
 	if options.html:
