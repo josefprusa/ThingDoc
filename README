@@ -1,6 +1,6 @@
 ThingDoc is a clever things comment parser.
 
-It uses syntax similar to JavaDoc and is able to generate:
+It uses syntax similar to Javadoc and is able to generate:
 
   * BoM text file
   * HTML documentation
