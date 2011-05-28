@@ -40,7 +40,7 @@ class Thing:
 		self.using = []         # list of dependencies (their {id}s)
 		self.price = None       # price of the thing (in $) - experimental
 		self.weight = None      # weight of the thing (in grams) - experimental
-		self.time = None        # how long does it take to complete the part (in minutes) - experimental
+		self.time = None        # how long does it take to assemble the part (in minutes) - experimental
 		self.desc = []          # description of the thing
 
 
