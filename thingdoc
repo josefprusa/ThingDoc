@@ -64,6 +64,7 @@ def process_file(absname, things):
 	except IOError:
 		fatal('Cannot open file %s' % absname)
 
+	success = True
 	thing = None
 	linenum = 0
 	for line in f:
@@ -71,22 +72,27 @@ def process_file(absname, things):
 		if line.startswith('/**'):
 			if thing:
 				error('Start of the comment (/**) found but the previous one is still open (%s:%d)' % (absname, linenum))
+				success = False
 			thing = Thing()
 			continue
 		if line.startswith(' */'):
 			if not thing:
 				error('End of the comment ( */) found but there is no previous open one (%s:%d)' % (absname, linenum))
+				success = False
 				continue
 			if not thing.id:
 				error('Missing mandatory attribute @id (%s:%d)' % (absname, linenum))
+				success = False
 			if not thing.name:
 				error('Missing mandatory attribute @name (%s:%d)' % (absname, linenum))
+				success = False
 			if thing.id and thing.name:
 				if things.has_key(thing.id):
 					if thing.id == 1:
 						fatal('More than one @root detected!')
 					else:
 						error("Duplicate thing id: '%s' (%s:%d)" % (thing.id, absname, linenum))
+						success = False
 				else:
 					things[ thing.id ] = thing
 			thing = None
@@ -95,6 +101,7 @@ def process_file(absname, things):
 			continue  # not in a comment
 		if not line.startswith(' * '):
 			error('Comment line does not start with a " * " (%s:%d)' % (absname, linenum))
+			success = False
 			continue
 		(key, _, value) = line[3:].strip().partition(' ')
 		if   key == '@id':
@@ -135,9 +142,11 @@ def process_file(absname, things):
 			thing.weight = float(time)
 		elif key.startswith('@'):
 			error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
+			success = False
 		else:
 			thing.desc.append(key + ' ' + value)
 	f.close()
+	return success
 
 
 def generate_tree(indir):
@@ -466,6 +475,7 @@ def main():
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'docs', help = 'use OUTDIR as output directory ("docs" by default)', metavar = 'OUTDIR')
 	parser.add_option('--imagedir', dest = 'imagedir', default = 'images', help = 'use IMAGEDIR subdirectory in OUTDIR for images used in HTML and TeX ("images" by default)', metavar = 'IMAGEDIR')
+	parser.add_option('-l', '--lint', dest = 'lint', default = None, help = 'check syntax in FILE and exit', metavar = 'FILE')
 	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = 'generate Bill of Materials')
 	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = 'generate HTML (markup) documentation')
 	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = 'generate TeX documentation')
@@ -474,6 +484,13 @@ def main():
 	parser.add_option('-g', '--graph', action = 'store_true', dest = 'graphviz', default = False, help = 'generate graphviz document')
 
 	(options, _) = parser.parse_args()
+
+	if options.lint:
+		if process_file(options.lint, {}):
+			print 'No syntax errors detected'
+			sys.exit(0)
+		else:
+			sys.exit(1)
 
 	if not options.bom and not options.html and not options.tex and not options.wiki:
 		options.bom = options.html = options.tex = options.wiki = True
