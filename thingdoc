@@ -87,7 +87,7 @@ def process_file(absname, things):
 				error('Missing mandatory attribute @name (%s:%d)' % (absname, linenum))
 				success = False
 			if thing.id and thing.name:
-				if things.has_key(thing.id):
+				if thing.id in things:
 					if thing.id == 1:
 						fatal('More than one @root detected!')
 					else:
@@ -165,7 +165,7 @@ def generate_tree(indir):
 
 def check_tree(tree):
 
-	if not tree.has_key(1):
+	if not 1 in tree:
 		fatal('Nothing was declared as @root')
 
 	# do BFS on dependency graph
