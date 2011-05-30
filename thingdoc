@@ -22,6 +22,7 @@ VERSION = '1.0'
 
 import optparse
 import os
+import re
 import sys
 import time
 
@@ -128,7 +129,11 @@ def process_file(absname, things):
 		elif key == '@type':
 			thing.type = value
 		elif key == '@step':
-			thing.step.append(value)
+			m = re.match('(.*)\[\[(.*)\]\]', value)
+			if m:
+				thing.step.append( (m.group(1).strip(), m.group(2).strip()) )
+			else:
+				thing.step.append(value)
 		elif key == '@comment':
 			thing.comment.append(value)
 		elif key == '@image':
@@ -379,7 +384,10 @@ def generate_html(tree, bom, instr, imagedir):
 		f.write('      <h3>%s</h3>\n' % i[0])
 		f.write('      <ol>\n')
 		for j in i[1:]:
-			f.write('        <li>%s</li>\n' % j)
+			if isinstance(j, tuple):
+				f.write('        <li>%s<br/><img src="%s/%s" width="256" /></li>\n' % (j[0], imagedir, j[1]))
+			else:
+				f.write('        <li>%s</li>\n' % j)
 		f.write('      </ol>\n')
 
 	f.write('''    <p class="footer">Generated on %s by ThingDoc - <a href="http://thingdoc.org/">http://thingdoc.org/</a></p>
@@ -472,7 +480,10 @@ def generate_tex(tree, bom, instr, imagedir):
 		f.write('\\subsection{%s}\n' % i[0])
 		f.write('\\begin{enumerate}\n')
 		for j in i[1:]:
-			f.write('\\item %s\n' % j)
+			if isinstance(j, tuple):
+				f.write('\\item %s\\\\ \\includegraphics[width=4cm]{%s/%s}\n' % (j[0], imagedir, j[1]))
+			else:
+				f.write('\\item %s\n' % j)
 		f.write('\\end{enumerate}\n')
 	f.write('\\newpage\n')
 
