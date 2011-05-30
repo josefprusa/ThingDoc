@@ -106,8 +106,9 @@ def process_file(absname, things):
 		if not thing:
 			continue  # not in a comment
 		if not line.startswith(' * '):
-			error('Comment line does not start with a " * " (%s:%d)' % (absname, linenum))
-			success = False
+			if line.rstrip() != ' *': # ignore lines ' *'
+				error('Comment line does not start with a " * " (%s:%d)' % (absname, linenum))
+				success = False
 			continue
 		(key, _, value) = line[3:].strip().partition(' ')
 		if   key == '@id':
