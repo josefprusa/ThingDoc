@@ -306,7 +306,7 @@ def extract_instructions(tree, id):
 	for (_, cid) in tree[id].using:
 		instr += extract_instructions(tree, cid)
 	if tree[id].step:
-		instr.append( ['Assemble ' + tree[id].name] + tree[id].step )
+		instr.append( [id] + tree[id].step )
 	return instr
 
 
@@ -381,7 +381,14 @@ def generate_html(tree, bom, instr, imagedir):
 	# Assembly instructions
 	f.write('    <h2>Assembly instructions</h2>\n')
 	for i in instr:
-		f.write('      <h3>%s</h3>\n' % i[0])
+		f.write('      <h3>Assemble %s</h3>\n' % tree[i[0]].name)
+		if tree[i[0]].using:
+			f.write('      <p>Things needed:</p>\n')
+			f.write('      <ul>\n')
+			for (cnt, id) in tree[i[0]].using:
+				f.write('        <li>%dx %s</li>\n' % (cnt, tree[id].name))
+			f.write('      </ul>\n')
+		f.write('      <p>Steps:</p>\n')
 		f.write('      <ol>\n')
 		for j in i[1:]:
 			if isinstance(j, tuple):
@@ -435,11 +442,11 @@ def generate_tex(tree, bom, instr, imagedir):
 \\usepackage{a4wide}
 \\usepackage{graphicx}
 \\title{%s documentation}
-\\author{ThingDoc %s}
+\\author{ThingDoc}
 \\begin{document}
 \\maketitle
 %s
-""" % cleanup_tex((tree[1].name, Global.start, '\n'.join(tree[1].desc))))
+""" % cleanup_tex((tree[1].name, '\n'.join(tree[1].desc))))
 
 	if tree[1].image:
 		f.write('\\begin{center}\n')
@@ -477,7 +484,14 @@ def generate_tex(tree, bom, instr, imagedir):
 	# Assembly instructions
 	f.write('\\section{Assembly instructions}\n')
 	for i in instr:
-		f.write('\\subsection{%s}\n' % i[0])
+		f.write('\\subsection{Assemble %s}\n' % tree[i[0]].name)
+		if tree[i[0]].using:
+			f.write('Things needed:\n')
+			f.write('\\begin{itemize}\n')
+			for (cnt, id) in tree[i[0]].using:
+				f.write('\\item %dx %s\n' % (cnt, tree[id].name))
+			f.write('\\end{itemize}\n')
+		f.write('Steps:\n')
 		f.write('\\begin{enumerate}\n')
 		for j in i[1:]:
 			if isinstance(j, tuple):
