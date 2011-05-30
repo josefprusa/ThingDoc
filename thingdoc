@@ -169,7 +169,7 @@ def generate_tree(indir):
 	return things
 
 
-def check_tree(tree):
+def check_tree(tree, imagedir):
 
 	if not 1 in tree:
 		fatal('Nothing was declared as @root')
@@ -187,6 +187,11 @@ def check_tree(tree):
 		if not thing in used:
 			used.append(thing)
 			queue += map(lambda x: x[1], tree[thing].using)
+		# do various alterations of items
+		if os.path.exists('%s/%s.jpg' % (imagedir, thing)):
+			tree[thing].image = '%s.jpg' % thing
+		elif os.path.exists('%s/%s.png' % (imagedir, thing)):
+			tree[thing].image = '%s.png' % thing
 
 	# handle unused things
 	for thing in tree.iterkeys():
@@ -480,7 +485,7 @@ def main():
 		epilog = 'If none of --bom, --html, --tex, --wiki are provided then all 4 types are generated.')
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'docs', help = 'use OUTDIR as output directory ("docs" by default)', metavar = 'OUTDIR')
-	parser.add_option('--imagedir', dest = 'imagedir', default = 'images', help = 'use IMAGEDIR subdirectory in OUTDIR for images used in HTML and TeX ("images" by default)', metavar = 'IMAGEDIR')
+	parser.add_option('--imagedir', dest = 'imagedir', default = 'images', help = 'use IMAGEDIR directory (relative to OUTDIR) to look for images used in HTML and TeX ("images" by default)', metavar = 'IMAGEDIR')
 	parser.add_option('-l', '--lint', dest = 'lint', default = None, help = 'check syntax in FILE and exit', metavar = 'FILE')
 	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = 'generate Bill of Materials')
 	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = 'generate HTML (markup) documentation')
@@ -514,7 +519,7 @@ def main():
 	except:
 		fatal('Cannot switch to OUTDIR: %s' % options.outdir)
 
-	check_tree(tree)
+	check_tree(tree, options.imagedir)
 
 	bom = extract_bom(tree)
 	instr = extract_instructions(tree, 1)
