@@ -366,7 +366,10 @@ def generate_html(tree, bom, instr, imagedir):
 		f.write('    <h3>%s</h3>\n' % cleanup_html(category))
 		f.write('    <ul>\n')
 		for k, v in bom[category].iteritems():
-			f.write('      <li>%dx %s</li>\n' % cleanup_html((v, tree[k].name)))
+			if not tree[k].common:
+				f.write('      <li>%dx <a href="#thing_%s">%s</a></li>\n' % cleanup_html((v, k, tree[k].name)))
+			else:
+				f.write('      <li>%dx %s</li>\n' % cleanup_html((v, tree[k].name)))
 		f.write('    </ul>\n\n')
 
 	# Things overview
@@ -374,7 +377,7 @@ def generate_html(tree, bom, instr, imagedir):
 	f.write('    <p>List of things and their descriptions</p>\n\n')
 	for thing in tree.itervalues():
 		if thing.id != 1 and thing.common == False:
-			f.write('    <h3>%s</h3>\n' % cleanup_html(thing.name))
+			f.write('    <h3 id="thing_%s">%s</h3>\n' % cleanup_html((thing.id, thing.name)))
 			if thing.desc:
 				f.write('      <p>%s</p>\n' % '\n'.join(thing.desc))
 			if thing.image:
@@ -389,7 +392,10 @@ def generate_html(tree, bom, instr, imagedir):
 			f.write('      <p>Things needed:</p>\n')
 			f.write('      <ul>\n')
 			for (id, cnt) in tree[i[0]].using.iteritems():
-				f.write('        <li>%dx %s</li>\n' % (cnt, tree[id].name))
+				if not tree[id].common:
+					f.write('        <li>%dx <a href="#thing_%s">%s</a></li>\n' % (cnt, id, tree[id].name))
+				else:
+					f.write('        <li>%dx %s</li>\n' % (cnt, tree[id].name))
 			f.write('      </ul>\n')
 		f.write('      <p>Steps:</p>\n')
 		f.write('      <ol>\n')
@@ -444,6 +450,7 @@ def generate_tex(tree, bom, instr, imagedir):
 \\usepackage[latin2]{inputenc}
 \\usepackage{a4wide}
 \\usepackage{graphicx}
+\\usepackage{hyperref}
 \\title{%s documentation}
 \\author{ThingDoc}
 \\begin{document}
@@ -467,7 +474,10 @@ def generate_tex(tree, bom, instr, imagedir):
 	for category in bom:
 		f.write('\\subsection{%s}\n\\begin{itemize}\n' % cleanup_tex(category))
 		for k, v in bom[category].iteritems():
-			f.write('\\item %dx %s\n' % cleanup_tex((v, tree[k].name)))
+			if not tree[k].common:
+				f.write('\\item %dx \\hyperlink{thing_%s}{%s}\n' % cleanup_tex((v, k, tree[k].name)))
+			else:
+				f.write('\\item %dx %s\n' % cleanup_tex((v, tree[k].name)))
 		f.write('\\end{itemize}\n')
 	f.write('\\newpage\n')
 
@@ -476,7 +486,7 @@ def generate_tex(tree, bom, instr, imagedir):
 	f.write('List of things and their descriptions\n')
 	for thing in tree.itervalues():
 		if thing.id != 1 and thing.common == False:
-			f.write('\\subsection{%s}\n' % cleanup_tex(thing.name))
+			f.write('\\hypertarget{thing_%s}{\\subsection{%s}}\n' % cleanup_tex((thing.id, thing.name)))
 			if thing.desc:
 				f.write('\n'.join(thing.desc) + '\n')
 			if thing.image:
@@ -492,7 +502,10 @@ def generate_tex(tree, bom, instr, imagedir):
 			f.write('Things needed:\n')
 			f.write('\\begin{itemize}\n')
 			for (id, cnt) in tree[i[0]].using.iteritems():
-				f.write('\\item %dx %s\n' % (cnt, tree[id].name))
+				if not tree[id].common:
+					f.write('\\item %dx \\hyperlink{thing_%s}{%s}\n' % (cnt, id, tree[id].name))
+				else:
+					f.write('\\item %dx %s\n' % (cnt, tree[id].name))
 			f.write('\\end{itemize}\n')
 		f.write('Steps:\n')
 		f.write('\\begin{enumerate}\n')
