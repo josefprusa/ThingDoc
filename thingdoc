@@ -451,6 +451,7 @@ def generate_tex(tree, bom, instr, imagedir):
 \\usepackage{a4wide}
 \\usepackage{graphicx}
 \\usepackage{hyperref}
+\\hypersetup{colorlinks=true,linkcolor=blue}
 \\title{%s documentation}
 \\author{ThingDoc}
 \\begin{document}
