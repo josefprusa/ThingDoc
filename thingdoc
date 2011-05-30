@@ -464,10 +464,10 @@ def generate_tex(tree, bom, instr, imagedir):
 	f.write('\\section{Assembly instructions}\n')
 	for i in instr:
 		f.write('\\subsection{%s}\n' % i[0])
-		f.write('\\begin{itemize}\n')
+		f.write('\\begin{enumerate}\n')
 		for j in i[1:]:
 			f.write('\\item %s\n' % j)
-		f.write('\\end{itemize}\n')
+		f.write('\\end{enumerate}\n')
 	f.write('\\newpage\n')
 
 	f.write('\\end{document}\n')
