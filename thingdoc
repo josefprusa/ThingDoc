@@ -23,6 +23,7 @@ VERSION = '1.0'
 import optparse
 import os
 import re
+import shutil
 import sys
 import time
 
@@ -347,15 +348,18 @@ def generate_html(tree, bom, instr, imagedir):
 		error('Cannot create thingdoc.html')
 		return
 
+	for i in ('iphone.css', 'jquery.js', 'thingdoc.css'):
+		shutil.copy(Global.path + '/html/' + i, i)
+
 	f.write('''<html>
   <head>
     <title>ThingDoc: %s</title>
    <link rel="stylesheet" type="text/css" href="thingdoc.css" />
    <link media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" rel="stylesheet" />
    <meta name = "viewport" content = "width = device-width, initial-scale = 1, user-scalable = no">
-   <script type="text/javascript" src="jquery.js"></script> 
+   <script type="text/javascript" src="jquery.js"></script>
    <script type="text/javascript">
-	 $(document).ready(function(){
+   $(document).ready(function(){
    $("#bombutton").click(function(){
      $("#bom").animate({ height: 'show', opacity: 'show' }, 'fast');
      $("#things").animate({ height: 'hide', opacity: 'hide' }, 'fast');
@@ -375,30 +379,26 @@ def generate_html(tree, bom, instr, imagedir):
      $("#intro").animate({ height: 'hide', opacity: 'hide' }, 'fast');
    });
  });
-	</script>
+  </script>
   </head>
   <body>
-  	
-  	<div class="menu">
-  	<a href="#" id="bombutton" class="button red">Bom</a>
-  	<a href="#" id="thingsbutton" class="button white">Things</a>
-  	<a href="#" id="assemblybutton" class="button white">Assembly</a>
-  	<span id="assemblybuttons">
-  	<a href="#" class="button white control"><</a>
-  	1/20
-  	<a href="#" class="button white control">></a>
-	</span></div>
-	
-	
-	
-	
-	<img src="logo.png" id="logo"/>
-	<div id="main">
-	<div id="intro">
+    <div class="menu">
+    <a href="#" id="bombutton" class="button red">Bom</a>
+    <a href="#" id="thingsbutton" class="button white">Things</a>
+    <a href="#" id="assemblybutton" class="button white">Assembly</a>
+    <span id="assemblybuttons">
+    <a href="#" class="button white control"><</a>
+    1/20
+    <a href="#" class="button white control">></a>
+    </span></div>
+
+    <img src="logo.png" id="logo"/>
+    <div id="main">
+    <div id="intro">
     <h1>ThingDoc: %s</h1>
- </div>
-	
-	<div id="bom">
+    </div>
+
+   <div id="bom">
 ''' % cleanup_html((tree[1].name, tree[1].name))
 	)
 	if tree[1].image:
@@ -596,6 +596,7 @@ def main():
 		options.bom = options.html = options.tex = options.wiki = True
 
 	Global.start = time.strftime("%Y/%m/%d %H:%M:%S")
+	Global.path = os.path.dirname(os.path.abspath(__file__))
 
 	tree = generate_tree(options.indir)
 
