@@ -348,7 +348,7 @@ def generate_html(tree, bom, instr, imagedir):
 		error('Cannot create thingdoc.html')
 		return
 
-	for i in ('iphone.css', 'jquery.js', 'thingdoc.css'):
+	for i in ('iphone.css', 'jquery.js', 'logo.png', 'thingdoc.css', 'thingdoc.js'):
 		shutil.copy(Global.path + '/html/' + i, i)
 
 	f.write('''<html>
@@ -358,32 +358,11 @@ def generate_html(tree, bom, instr, imagedir):
    <link media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" rel="stylesheet" />
    <meta name = "viewport" content = "width = device-width, initial-scale = 1, user-scalable = no">
    <script type="text/javascript" src="jquery.js"></script>
-   <script type="text/javascript">
-   $(document).ready(function(){
-   $("#bombutton").click(function(){
-     $("#bom").animate({ height: 'show', opacity: 'show' }, 'fast');
-     $("#things").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-     $("#assembly").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-     $("#intro").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-   });
-   $("#thingsbutton").click(function(){
-     $("#bom").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-     $("#things").animate({ height: 'show', opacity: 'show' }, 'fast');
-     $("#assembly").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-     $("#intro").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-   });
-   $("#assemblybutton").click(function(){
-     $("#bom").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-     $("#things").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-     $("#assembly").animate({ height: 'show', opacity: 'show' }, 'fast');
-     $("#intro").animate({ height: 'hide', opacity: 'hide' }, 'fast');
-   });
- });
-  </script>
+   <script type="text/javascript" src="thingdoc.js"></script>
   </head>
   <body>
     <div class="menu">
-    <a href="#" id="bombutton" class="button red">Bom</a>
+    <a href="#" id="bombutton" class="button red">BOM</a>
     <a href="#" id="thingsbutton" class="button white">Things</a>
     <a href="#" id="assemblybutton" class="button white">Assembly</a>
     <span id="assemblybuttons">
@@ -392,7 +371,7 @@ def generate_html(tree, bom, instr, imagedir):
     <a href="#" class="button white control">></a>
     </span></div>
 
-    <img src="logo.png" id="logo"/>
+    <a href="http://thingdoc.org/"><img src="logo.png" id="logo"/></a>
     <div id="main">
     <div id="intro">
     <h1>ThingDoc: %s</h1>
@@ -405,16 +384,16 @@ def generate_html(tree, bom, instr, imagedir):
 		f.write('    <img src="%s/%s" width="512" />\n' % cleanup_tex((imagedir, tree[1].image)))
 
 	# BOM
-	f.write('    <h2>Bill of Materials</h2>\n\n<p>Check all parts to get green <a href="#bom" class="button green smallbutton">bom</a> button in menu, then proceed to the assembly.</p>')
+	f.write('    <h2>Bill of Materials</h2>\n\n<p>Check all parts to get green <a href="#bom" class="button green smallbutton">BOM</a> button in menu, then proceed to the assembly.</p>')
 	for category in bom:
 		f.write('    <h3>%s</h3>\n' % cleanup_html(category))
-		f.write('    <ul>\n')
+		f.write('    <table id="bomtable">\n')
 		for k, v in bom[category].iteritems():
 			if not tree[k].common:
-				f.write('      <li><input type="checkbox" name="skrtatko"> <strong>%dx</strong> <a href="#thing_%s">%s</a></li>\n' % cleanup_html((v, k, tree[k].name)))
+				f.write('      <tr><td><input type="checkbox" name="bomticker"></td><td class="right"><strong>%d x</strong></td><td><a href="#thing_%s">%s</a></td></tr>\n' % cleanup_html((v, k, tree[k].name)))
 			else:
-				f.write('      <li><input type="checkbox" name="skrtatko"> <strong>%dx</strong> %s</li>\n' % cleanup_html((v, tree[k].name)))
-		f.write('    </ul>\n\n')
+				f.write('      <tr><td><input type="checkbox" name="bomticker"></td><td class="right"><strong>%d x</strong></td><td>%s</td></tr>\n' % cleanup_html((v, tree[k].name)))
+		f.write('    </table>\n\n')
 	f.write('    </div>')
 
 	# Things overview
