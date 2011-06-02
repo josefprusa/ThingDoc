@@ -350,30 +350,75 @@ def generate_html(tree, bom, instr, imagedir):
 	f.write('''<html>
   <head>
     <title>ThingDoc: %s</title>
+   <link rel="stylesheet" type="text/css" href="thingdoc.css" />
+   <link media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" rel="stylesheet" />
+   <meta name = "viewport" content = "width = device-width, initial-scale = 1, user-scalable = no">
+   <script type="text/javascript" src="jquery.js"></script> 
+   <script type="text/javascript">
+	 $(document).ready(function(){
+   $("#bombutton").click(function(){
+     $("#bom").animate({ height: 'show', opacity: 'show' }, 'fast');
+     $("#things").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+     $("#assembly").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+     $("#intro").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+   });
+   $("#thingsbutton").click(function(){
+     $("#bom").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+     $("#things").animate({ height: 'show', opacity: 'show' }, 'fast');
+     $("#assembly").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+     $("#intro").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+   });
+   $("#assemblybutton").click(function(){
+     $("#bom").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+     $("#things").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+     $("#assembly").animate({ height: 'show', opacity: 'show' }, 'fast');
+     $("#intro").animate({ height: 'hide', opacity: 'hide' }, 'fast');
+   });
+ });
+	</script>
   </head>
   <body>
-
+  	
+  	<div class="menu">
+  	<a href="#" id="bombutton" class="button red">Bom</a>
+  	<a href="#" id="thingsbutton" class="button white">Things</a>
+  	<a href="#" id="assemblybutton" class="button white">Assembly</a>
+  	<span id="assemblybuttons">
+  	<a href="#" class="button white control"><</a>
+  	1/20
+  	<a href="#" class="button white control">></a>
+	</span></div>
+	
+	
+	
+	
+	<img src="logo.png" id="logo"/>
+	<div id="main">
+	<div id="intro">
     <h1>ThingDoc: %s</h1>
-
+ </div>
+	
+	<div id="bom">
 ''' % cleanup_html((tree[1].name, tree[1].name))
 	)
 	if tree[1].image:
 		f.write('    <img src="%s/%s" width="512" />\n' % cleanup_tex((imagedir, tree[1].image)))
 
 	# BOM
-	f.write('    <h2>Bill of Materials</h2>\n\n')
+	f.write('    <h2>Bill of Materials</h2>\n\n<p>Check all parts to get green <a href="#bom" class="button green smallbutton">bom</a> button in menu, then proceed to the assembly.</p>')
 	for category in bom:
 		f.write('    <h3>%s</h3>\n' % cleanup_html(category))
 		f.write('    <ul>\n')
 		for k, v in bom[category].iteritems():
 			if not tree[k].common:
-				f.write('      <li>%dx <a href="#thing_%s">%s</a></li>\n' % cleanup_html((v, k, tree[k].name)))
+				f.write('      <li><input type="checkbox" name="skrtatko"> <strong>%dx</strong> <a href="#thing_%s">%s</a></li>\n' % cleanup_html((v, k, tree[k].name)))
 			else:
-				f.write('      <li>%dx %s</li>\n' % cleanup_html((v, tree[k].name)))
+				f.write('      <li><input type="checkbox" name="skrtatko"> <strong>%dx</strong> %s</li>\n' % cleanup_html((v, tree[k].name)))
 		f.write('    </ul>\n\n')
+	f.write('    </div>')
 
 	# Things overview
-	f.write('    <h2>Things overview</h2>\n')
+	f.write('    <div id="things"><h2>Things overview</h2>\n')
 	f.write('    <p>List of things and their descriptions</p>\n\n')
 	for thing in tree.itervalues():
 		if thing.id != 1 and thing.common == False:
@@ -383,9 +428,10 @@ def generate_html(tree, bom, instr, imagedir):
 			if thing.image:
 				f.write('      <img src="%s/%s" width="256" />\n' % cleanup_tex((imagedir, thing.image)))
 			f.write('\n')
+	f.write('</div>\n')
 
 	# Assembly instructions
-	f.write('    <h2>Assembly instructions</h2>\n')
+	f.write('    <div id="assembly"><h2>Assembly instructions</h2>\n')
 	for i in instr:
 		f.write('      <h3>Assemble %s</h3>\n' % tree[i[0]].name)
 		if tree[i[0]].using:
@@ -406,7 +452,7 @@ def generate_html(tree, bom, instr, imagedir):
 				f.write('        <li>%s</li>\n' % j)
 		f.write('      </ol>\n')
 
-	f.write('''    <p class="footer">Generated on %s by ThingDoc - <a href="http://thingdoc.org/">http://thingdoc.org/</a></p>
+	f.write('''    </div><p class="footer">Generated on %s by ThingDoc - <a href="http://thingdoc.org/">http://thingdoc.org/</a></p></div>
   </body>
 </html>
 ''' % Global.start)
