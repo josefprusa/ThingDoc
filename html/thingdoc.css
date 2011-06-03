@@ -1,7 +1,7 @@
 body {
 	background: #fff;
 	color: #444;
-	font: 85%/115% georgia,verdana,arial;
+	font: 85%/115% Georgia, Garamond, verdana, arial;
 	line-height: 20px;
 	margin: 0px;
 	padding: 0px;
@@ -14,6 +14,7 @@ body {
 	margin-right: auto;
 	padding-top: 20px;
 	width: 500px;
+	padding-bottom: 30px;
 }
 
 a {
@@ -159,4 +160,32 @@ a:hover {
 
 .right {
 	text-align: right;
+}
+
+table {
+	border-width: 0 0 1px 1px;
+	border-spacing: 0;
+	border-collapse: collapse;
+	border-style: solid;
+	border-color: #ddd;
+}
+
+td, th {
+	margin: 0;
+	padding: 4px;
+	border-width: 1px 1px 0 0;
+	border-style: solid;
+	border-color: #ddd;
+}
+
+#bom {
+	display: none;
+}
+
+#things {
+	display: none;
+}
+
+#assembly {
+	display: none;
 }

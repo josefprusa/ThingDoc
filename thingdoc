@@ -366,25 +366,23 @@ def generate_html(tree, bom, instr, imagedir):
     <a href="#" id="thingsbutton" class="button white">Things</a>
     <a href="#" id="assemblybutton" class="button white">Assembly</a>
     <span id="assemblybuttons">
-    <a href="#" class="button white control"><</a>
+    <a href="#" class="button white control">&lt;</a>
     1/20
-    <a href="#" class="button white control">></a>
+    <a href="#" class="button white control">&gt;</a>
     </span></div>
 
     <a href="http://thingdoc.org/"><img src="logo.png" id="logo"/></a>
     <div id="main">
     <div id="intro">
     <h1>ThingDoc: %s</h1>
-    </div>
-
-   <div id="bom">
 ''' % cleanup_html((tree[1].name, tree[1].name))
 	)
 	if tree[1].image:
 		f.write('    <img src="%s/%s" width="512" />\n' % cleanup_tex((imagedir, tree[1].image)))
 
 	# BOM
-	f.write('    <h2>Bill of Materials</h2>\n\n<p>Check all parts to get green <a href="#bom" class="button green smallbutton">BOM</a> button in menu, then proceed to the assembly.</p>')
+	f.write('''</div>
+    <div id="bom"><h2>Bill of Materials</h2>\n\n<p>Check all parts to get green <a href="#bom" class="button green smallbutton">BOM</a> button in menu, then proceed to the assembly.</p>''')
 	for category in bom:
 		f.write('    <h3>%s</h3>\n' % cleanup_html(category))
 		f.write('    <table id="bomtable">\n')
@@ -431,9 +429,11 @@ def generate_html(tree, bom, instr, imagedir):
 				f.write('        <li>%s</li>\n' % j)
 		f.write('      </ol>\n')
 
-	f.write('''    </div><p class="footer">Generated on %s by ThingDoc - <a href="http://thingdoc.org/">http://thingdoc.org/</a></p></div>
+	f.write('''    </div>
+    </div>
   </body>
 </html>
+<!-- Generated on %s by ThingDoc -->
 ''' % Global.start)
 	f.close()
 
