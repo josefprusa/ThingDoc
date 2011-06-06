@@ -40,7 +40,7 @@ class Thing:
 		self.since = ''         # since when does the thing exist (can be YYYY-MM-DD or some tag, e.g. "Mendel")
 		self.comment = []       # comments
 		self.image = None       # thing image (filename with extension)
-		self.using = {}         # list of dependencies (their {id}s)
+		self.using = {}         # dict of dependencies (id: cnt)
 		self.price = None       # price of the thing (in $) - experimental
 		self.weight = None      # weight of the thing (in grams) - experimental
 		self.time = None        # how long does it take to assemble the part (in minutes) - experimental
@@ -291,16 +291,16 @@ def extract_bom(tree):
 	while queue:
 		using = queue.pop(0)
 		for (id, cnt) in using:
-			if tree[id].category in bom:
-				bomcat = bom[tree[id].category]
-				if id in bomcat:
-					bomcat[id] += cnt
+			thing = tree[id]
+			if thing.category in bom:
+				if id in bom[thing.category]:
+					bom[thing.category][id] += cnt
 				else:
-					bomcat[id] = cnt
+					bom[thing.category][id] = cnt
 			else:
-				if tree[id].category:
-					bom[tree[id].category] = {id: cnt}
-			queue += [ tree[id].using.items() ]
+				if thing.category:
+					bom[thing.category] = {id: cnt}
+			queue += [ map(lambda (a,b): (a,b*cnt), thing.using.items()) ]
 	return bom
 
 
