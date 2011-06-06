@@ -20,12 +20,13 @@
 
 VERSION = '1.0'
 
-import optparse
 import os
 import re
 import shutil
 import sys
 import time
+from jinja2 import Environment, FileSystemLoader
+from optparse import OptionParser
 
 class Thing:
 
@@ -321,15 +322,9 @@ def generate_bom(tree, bom):
 	except:
 		error('Cannot create bom.txt')
 		return
-	f.write('Bill of Materials: %s\n' % tree[1].name)
-	f.write((len(tree[1].name) + 19) * '+' + '\n\n')
-	for category in bom:
-		f.write(category + '\n')
-		f.write(len(category) * '=' + '\n')
-		for k, v in bom[category].iteritems():
-			f.write('- %dx %s\n' % (v, tree[k].name))
-		f.write('\n')
-	f.write('----\nGenerated on %s by ThingDoc - http://thingdoc.org/\n' % Global.start)
+
+	template = Global.jinja.get_template('bom.txt')
+	f.write(template.render(title = tree[1].name, start = Global.start, tree = tree, bom = bom))
 	f.close()
 
 
@@ -446,13 +441,8 @@ def generate_wiki(tree, bom):
 		error('Cannot create thingdoc.wiki')
 		return
 
-	f.write('== Bill of Materials ==\n')
-	for category in bom:
-		f.write('=== %s ===\n{| class="wikitable sortable" border="1"\n|-\n! scope="col" | Quantity\n! scope="col" | Description\n! scope="col" | Type\n! scope="col" class="unsortable" | Comments\n! scope="col" class="unsortable" | Diagram\n' % category)
-		for k, v in bom[category].iteritems():
-			img = tree[k].image and ' [[File:%s|50px]]' % tree[k].image or ''
-			f.write('|-\n| %d || %s || %s || %s ||%s\n' % (v, tree[k].name, tree[k].type, '; '.join(tree[k].comment), img))
-		f.write('|}\n')
+	template = Global.jinja.get_template('thingdoc.wiki')
+	f.write(template.render(tree = tree, bom = bom))
 	f.close()
 
 
@@ -548,7 +538,7 @@ def generate_tex(tree, bom, instr, imagedir):
 
 def main():
 
-	parser = optparse.OptionParser(
+	parser = OptionParser(
 		version = '%prog ' + VERSION,
 		epilog = 'If none of --bom, --html, --tex, --wiki are provided then all 4 types are generated.')
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
@@ -576,6 +566,7 @@ def main():
 
 	Global.start = time.strftime("%Y/%m/%d %H:%M:%S")
 	Global.path = os.path.dirname(os.path.abspath(__file__))
+	Global.jinja = Environment(loader = FileSystemLoader(Global.path + '/templates/'))
 
 	tree = generate_tree(options.indir)
 

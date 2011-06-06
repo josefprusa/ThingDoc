@@ -1,0 +1,16 @@
+== Bill of Materials ==
+{% for category in bom %}
+=== {{ category }} ===
+{| class="wikitable sortable" border="1"
+|-
+! scope="col" | Quantity
+! scope="col" | Description
+! scope="col" | Type
+! scope="col" class="unsortable" | Comments
+! scope="col" class="unsortable" | Diagram
+{% for id, cnt in bom[category].iteritems() -%}
+|-
+| {{ cnt }} || {{ tree[id].name }} || {{ tree[id].type }} || {{ tree[id].comment|join('; ') if tree[id].comment }} ||{{ ' [[File:%s|50px]]' % tree[id].image if tree[id].image }}
+{% endfor -%}
+|}
+{% endfor %}

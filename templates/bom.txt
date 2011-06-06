@@ -1,0 +1,11 @@
+Bill of Materials: {{ title }}
+{{ (title|length + 19) * '+' }}
+{% for category in bom %}
+{{ category }}
+{{ (category|length) * '=' }}
+{% for id, cnt in bom[category].iteritems() -%}
+- {{ cnt }}x {{tree[id].name}}
+{% endfor -%}
+{% endfor %}
+----
+Generated on {{ start }} by ThingDoc - http://thingdoc.org/
