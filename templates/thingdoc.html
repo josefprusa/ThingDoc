@@ -1,0 +1,101 @@
+<html>
+  <head>
+    <title>ThingDoc: {{ title|e }}</title>
+    <link rel="stylesheet" type="text/css" href="thingdoc.css" />
+    <link media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" rel="stylesheet" />
+    <meta name="viewport" content="width = device-width, initial-scale = 1, user-scalable = no" />
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="thingdoc.js"></script>
+  </head>
+  <body>
+
+    <div class="menu">
+      <a href="#" id="bombutton" class="button red">BOM</a>
+      <a href="#" id="thingsbutton" class="button white">Things</a>
+      <a href="#" id="assemblybutton" class="button white">Assembly</a>
+      <span id="assemblybuttons">
+      <a href="#" class="button white control">&lt;</a>
+      1/20
+      <a href="#" class="button white control">&gt;</a>
+      </span>
+    </div>
+
+    <a href="http://thingdoc.org/"><img src="logo.png" id="logo"/></a>
+
+    <div id="main">
+
+    <div id="intro">
+      <h1>ThingDoc: {{ title|e }}</h1>
+{%- if titleimg -%}
+      <img src="{{ imagedir|e }}/{{ titleimg|e }}" width="512" />
+{%- endif %}
+    </div>
+
+    <div id="bom">
+      <h2>Bill of Materials</h2>
+      <p>Check all parts to get green <a href="#bom" class="button green smallbutton">BOM</a> button in menu, then proceed to the assembly.</p>
+{% for category in bom %}
+      <h3>{{ category|e }}</h3>
+      <table id="bomtable">
+{%- for id, cnt in bom[category].iteritems() %}
+        <tr><td><input type="checkbox" name="bomticker"></td><td class="right"><strong>{{ cnt|e }} x</strong></td>
+{%- if tree[id].common -%}
+<td>{{ tree[id].name|e}}</td></tr>
+{%- else -%}
+<td><a href="#thing_{{ id|e }}">{{ tree[id].name|e }}</a></td></tr>
+{%- endif -%}
+{% endfor %}
+      </table>
+{% endfor %}
+    </div>
+
+    <div id="things">
+      <h2>Things overview</h2>
+      <p>List of things and their descriptions</p>
+{% for thing in tree.itervalues() %}
+{%- if thing.id != 1 and thing.common == False %}
+      <h3 id="thing_{{ thing.id|e }}">{{ thing.name|e }}</h3>
+{%- if thing.desc %}
+        <p>{{ thing.desc|join(' ')|e }}</p>
+{%- endif %}
+{%- if thing.image %}
+        <img src="{{ imagedir|e }}/{{ thing.image|e }}" width="256" />
+{%- endif %}
+{% endif -%}
+{% endfor %}
+    </div>
+
+    <div id="assembly">
+      <h2>Assembly instructions</h2>
+{% for i in instr %}
+      <h3>Assemble {{ tree[i[0]].name|e }}</h3>
+{%- if tree[i[0]].using %}
+        <p>Things needed:</p>
+        <ul>
+{%- for id, cnt in tree[i[0]].using.iteritems() %}
+{%- if tree[id].common %}
+          <li>{{ cnt|e }}x {{ tree[id].name|e }}</li>
+{%- else %}
+          <li>{{ cnt|e }}x <a href="#thing_{{ id|e }}">{{ tree[id].name|e }}</a></li>
+{%- endif %}
+{%- endfor %}
+        </ul>
+{% endif %}
+        <p>Steps:</p>
+        <ol>
+{%- for j in i[1:] %}
+{%- if j.img %}
+          <li>{{ j.text|e }}<br/><img src="{{ imagedir|e }}/{{ j.img|e }}" width="256" /></li>
+{%- else %}
+          <li>{{ j.text|e }}</li>
+{%- endif %}
+{%- endfor %}
+        </ol>
+{% endfor %}
+    </div>
+
+    </div>
+
+  </body>
+</html>
+<!-- Generated on {{ start|e }} by ThingDoc -->
