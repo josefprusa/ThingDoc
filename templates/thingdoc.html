@@ -26,6 +26,9 @@
 
     <div id="intro">
       <h1>ThingDoc: {{ title|e }}</h1>
+{%- if titledesc %}
+      <p>{{ titledesc|join(' ')|e }}</p>
+{%- endif %}
 {%- if titleimg -%}
       <img src="{{ imagedir|e }}/{{ titleimg|e }}" width="512" />
 {%- endif %}

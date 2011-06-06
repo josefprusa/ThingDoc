@@ -1,0 +1,92 @@
+\documentclass[11pt]{article}
+\usepackage[latin2]{inputenc}
+\usepackage{a4wide}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue}
+\title{
+{{- title }} documentation}
+\author{ThingDoc}
+\begin{document}
+\maketitle
+{% if titledesc -%}
+{{ titledesc|join(' ') }}
+{%- endif %}
+
+{%- if titleimage -%}
+\begin{center}
+\includegraphics[width=8cm]{
+{{- imagedir }}/{{ titleimage }}}
+\end{center}
+{%- endif %}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Bill of materials}
+List of things you need to build the machine divided by categories.
+{% for category in bom %}
+\subsection{
+{{- category }}}
+\begin{itemize}
+{% for id, cnt in bom[category].iteritems() %}
+{%- if tree[id].common -%}
+\item {{ cnt }}x {{ tree[id].name }}
+{% else -%}
+\item {{ cnt }}x \hyperlink{thing_{{ id }}}{
+{{- tree[id].name }}}
+{% endif %}
+{%- endfor -%}
+\end{itemize}
+{% endfor %}
+\newpage
+
+\section{Things overview}
+List of things and their descriptions.
+{% for thing in tree.itervalues() %}
+{%- if thing.id != 1 and thing.common == False %}
+\hypertarget{thing_{{ thing.id }}}{\subsection{
+{{- thing.name}}}}
+{%- if thing.desc %}
+{{ thing.desc|join('\n') }}
+{%- endif %}
+{%- if thing.image %}
+\includegraphics[width=4cm]{
+{{- imagedir }}/{{ thing.image }}}
+{%- endif %}
+{% endif -%}
+{% endfor %}
+\newpage
+
+\section{Assembly instructions}
+{% for i in instr %}
+\subsection{Assemble {{ tree[i[0]].name }}}
+{%- if tree[i[0]].using %}
+Things needed:
+\begin{itemize}
+{%- for id, cnt in tree[i[0]].using.iteritems() %}
+{%- if tree[id].common %}
+\item {{ cnt }}x {{ tree[id].name }}
+{%- else %}
+\item {{ cnt }}x \hyperlink{thing_{{ id }}}{
+{{- tree[id].name }}}
+{%- endif %}
+{%- endfor %}
+\end{itemize}
+{% endif -%}
+Steps:
+\begin{enumerate}
+{% for j in i[1:] -%}
+{%- if j.img -%}
+\item {{ j.text }}\\ \includegraphics[width=4cm]{
+{{- imagedir }}/{{ j.img }}}
+{%- else -%}
+\item {{ j.text }}
+{%- endif %}
+{% endfor -%}
+\end{enumerate}
+{% endfor %}
+\newpage
+
+\end{document}

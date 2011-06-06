@@ -341,7 +341,7 @@ def generate_html(tree, bom, instr, imagedir):
 		shutil.copy(Global.path + '/html/' + i, i)
 
 	template = Global.jinja.get_template('thingdoc.html')
-	f.write(template.render(title = tree[1].name, titleimg = tree[1].image, start = Global.start, tree = tree, bom = bom, instr = instr, imagedir = imagedir))
+	f.write(template.render(title = tree[1].name, titleimg = tree[1].image, titledesc=tree[1].desc, start = Global.start, tree = tree, bom = bom, instr = instr, imagedir = imagedir))
 	f.close()
 
 
@@ -358,13 +358,6 @@ def generate_wiki(tree, bom):
 	f.close()
 
 
-def cleanup_tex(string):
-	if isinstance(string, (list, tuple)):
-		return tuple(map(lambda x: isinstance(x, str) and x.replace('&', '\\&') or x, string))
-	else:
-		return string.replace('&', '\\&')
-
-
 def generate_tex(tree, bom, instr, imagedir):
 
 	try:
@@ -373,79 +366,9 @@ def generate_tex(tree, bom, instr, imagedir):
 		error('Cannot create thingdoc.tex')
 		return
 
-	f.write("""\\documentclass[11pt]{article}
-\\usepackage[latin2]{inputenc}
-\\usepackage{a4wide}
-\\usepackage{graphicx}
-\\usepackage{hyperref}
-\\hypersetup{colorlinks=true,linkcolor=blue}
-\\title{%s documentation}
-\\author{ThingDoc}
-\\begin{document}
-\\maketitle
-%s
-""" % cleanup_tex((tree[1].name, '\n'.join(tree[1].desc))))
-
-	if tree[1].image:
-		f.write('\\begin{center}\n')
-		f.write('\\includegraphics[width=8cm]{%s/%s}\n' % cleanup_tex((imagedir, tree[1].image)))
-		f.write('\\end{center}\n')
-
-	f.write("""\\newpage
-\\tableofcontents
-\\newpage
-""")
-
-	# BOM
-	f.write('\\section{Bill of materials}\n')
-	f.write('List of things you need to build the machine divided by categories\n')
-	for category in bom:
-		f.write('\\subsection{%s}\n\\begin{itemize}\n' % cleanup_tex(category))
-		for k, v in bom[category].iteritems():
-			if not tree[k].common:
-				f.write('\\item %dx \\hyperlink{thing_%s}{%s}\n' % cleanup_tex((v, k, tree[k].name)))
-			else:
-				f.write('\\item %dx %s\n' % cleanup_tex((v, tree[k].name)))
-		f.write('\\end{itemize}\n')
-	f.write('\\newpage\n')
-
-	# Things overview
-	f.write('\\section{Things overview}\n')
-	f.write('List of things and their descriptions\n')
-	for thing in tree.itervalues():
-		if thing.id != 1 and thing.common == False:
-			f.write('\\hypertarget{thing_%s}{\\subsection{%s}}\n' % cleanup_tex((thing.id, thing.name)))
-			if thing.desc:
-				f.write('\n'.join(thing.desc) + '\n')
-			if thing.image:
-				f.write('\\includegraphics[width=4cm]{%s/%s}\n' % cleanup_tex((imagedir, thing.image)))
-			f.write('\n')
-	f.write('\\newpage\n')
-
-	# Assembly instructions
-	f.write('\\section{Assembly instructions}\n')
-	for i in instr:
-		f.write('\\subsection{Assemble %s}\n' % tree[i[0]].name)
-		if tree[i[0]].using:
-			f.write('Things needed:\n')
-			f.write('\\begin{itemize}\n')
-			for (id, cnt) in tree[i[0]].using.iteritems():
-				if not tree[id].common:
-					f.write('\\item %dx \\hyperlink{thing_%s}{%s}\n' % (cnt, id, tree[id].name))
-				else:
-					f.write('\\item %dx %s\n' % (cnt, tree[id].name))
-			f.write('\\end{itemize}\n')
-		f.write('Steps:\n')
-		f.write('\\begin{enumerate}\n')
-		for j in i[1:]:
-			if isinstance(j, tuple):
-				f.write('\\item %s\\\\ \\includegraphics[width=4cm]{%s/%s}\n' % (j[0], imagedir, j[1]))
-			else:
-				f.write('\\item %s\n' % j)
-		f.write('\\end{enumerate}\n')
-	f.write('\\newpage\n')
-
-	f.write('\\end{document}\n')
+	template = Global.jinja.get_template('thingdoc.tex')
+	f.write(template.render(title = tree[1].name, titleimg = tree[1].image, titledesc=tree[1].desc, start = Global.start, tree = tree, bom = bom, instr = instr, imagedir = imagedir))
+	f.close()
 
 
 def main():
