@@ -4,8 +4,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue}
-\title{
-{{- title }} documentation}
+\title{ {{- title }} documentation}
 \author{ThingDoc}
 \begin{document}
 \maketitle
@@ -15,8 +14,7 @@
 
 {%- if titleimage -%}
 \begin{center}
-\includegraphics[width=8cm]{
-{{- imagedir }}/{{ titleimage }}}
+\includegraphics[width=8cm]{ {{- imagedir }}/{{ titleimage }}}
 \end{center}
 {%- endif %}
 
@@ -27,15 +25,13 @@
 \section{Bill of materials}
 List of things you need to build the machine divided by categories.
 {% for category in bom %}
-\subsection{
-{{- category }}}
+\subsection{ {{- category }}}
 \begin{itemize}
 {% for id, cnt in bom[category].iteritems() %}
 {%- if tree[id].common -%}
 \item {{ cnt }}x {{ tree[id].name }}
 {% else -%}
-\item {{ cnt }}x \hyperlink{thing_{{ id }}}{
-{{- tree[id].name }}}
+\item {{ cnt }}x \hyperlink{thing_{{ id }}}{ {{- tree[id].name }}}
 {% endif %}
 {%- endfor -%}
 \end{itemize}
@@ -46,14 +42,12 @@ List of things you need to build the machine divided by categories.
 List of things and their descriptions.
 {% for thing in tree.itervalues() %}
 {%- if thing.id != 1 and thing.common == False %}
-\hypertarget{thing_{{ thing.id }}}{\subsection{
-{{- thing.name}}}}
+\hypertarget{thing_{{ thing.id }}}{\subsection{ {{- thing.name}}}}
 {%- if thing.desc %}
 {{ thing.desc|join('\n') }}
 {%- endif %}
 {%- if thing.image %}
-\includegraphics[width=4cm]{
-{{- imagedir }}/{{ thing.image }}}
+\includegraphics[width=4cm]{ {{- imagedir }}/{{ thing.image }}}
 {%- endif %}
 {% endif -%}
 {% endfor %}
@@ -69,8 +63,7 @@ Things needed:
 {%- if tree[id].common %}
 \item {{ cnt }}x {{ tree[id].name }}
 {%- else %}
-\item {{ cnt }}x \hyperlink{thing_{{ id }}}{
-{{- tree[id].name }}}
+\item {{ cnt }}x \hyperlink{thing_{{ id }}}{ {{- tree[id].name }}}
 {%- endif %}
 {%- endfor %}
 \end{itemize}
@@ -79,8 +72,7 @@ Steps:
 \begin{enumerate}
 {% for j in i[1:] -%}
 {%- if j.img -%}
-\item {{ j.text }}\\ \includegraphics[width=4cm]{
-{{- imagedir }}/{{ j.img }}}
+\item {{ j.text }}\\ \includegraphics[width=4cm]{ {{- imagedir }}/{{ j.img }}}
 {%- else -%}
 \item {{ j.text }}
 {%- endif %}
