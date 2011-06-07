@@ -161,7 +161,8 @@ def process_file(absname, things):
 			error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
 			success = False
 		else:
-			thing.desc.append(key + ' ' + value)
+			if key:
+				thing.desc.append((key + ' ' + value).strip())
 	f.close()
 	return success
 
@@ -337,7 +338,7 @@ def generate_html(tree, bom, instr, imagedir):
 		return
 
 	# copy static files
-	for i in ('iphone.css', 'jquery.js', 'logo.png', 'thingdoc.css', 'thingdoc.js'):
+	for i in ('iphone.css', 'jquery.js', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
 		shutil.copy(Global.datadir + i, i)
 
 	template = Global.jinja.get_template('template.html')

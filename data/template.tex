@@ -6,12 +6,13 @@
 \hypersetup{colorlinks=true,linkcolor=blue}
 \title{ {{- title }} documentation}
 \author{ThingDoc}
+
 \begin{document}
+
 \maketitle
 {% if titledesc -%}
 {{ titledesc|join(' ') }}
 {%- endif %}
-
 {%- if titleimage -%}
 \begin{center}
 \includegraphics[width=8cm]{ {{- imagedir }}/{{ titleimage }}}
@@ -19,10 +20,12 @@
 {%- endif %}
 
 \newpage
+
 \tableofcontents
+
 \newpage
 
-\section{Bill of materials}
+\section{Bill of Materials}
 List of things you need to build the machine divided by categories.
 {% for category in bom %}
 \subsection{ {{- category }}}
@@ -38,7 +41,7 @@ List of things you need to build the machine divided by categories.
 {% endfor %}
 \newpage
 
-\section{Things overview}
+\section{Things Overview}
 List of things and their descriptions.
 {% for thing in tree.itervalues() %}
 {%- if thing.id != 1 and thing.common == False %}
@@ -53,7 +56,7 @@ List of things and their descriptions.
 {% endfor %}
 \newpage
 
-\section{Assembly instructions}
+\section{Assembly Instructions}
 {% for i in instr %}
 \subsection{Assemble {{ tree[i[0]].name }}}
 {%- if tree[i[0]].using %}
