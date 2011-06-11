@@ -28,6 +28,7 @@ import time
 from jinja2 import Environment, FileSystemLoader
 from optparse import OptionParser
 
+
 class Thing:
 
 	def __init__(self):
@@ -50,13 +51,13 @@ class Thing:
 
 class ThingDoc:
 
-	def __init__(self, indir, outdir, imagedir):
+	def parse(self, indir, outdir, imagedir):
 
 		self.indir = indir
 		self.outdir = outdir
 		self.imagedir = imagedir
 
-		self.start = time.strftime("%Y/%m/%d %H:%M:%S")
+		self.start = time.strftime('%Y/%m/%d %H:%M:%S')
 		self.datadir = os.path.dirname(os.path.abspath(__file__)) + '/data/'
 		self.jinja = Environment(loader = FileSystemLoader(self.datadir))
 
@@ -72,7 +73,6 @@ class ThingDoc:
 			self.fatal('Cannot switch to OUTDIR: %s' % self.outdir)
 
 		self.check_tree()
-
 		self.bom = self.extract_bom()
 		self.instr = self.extract_instructions(1)
 
@@ -210,7 +210,7 @@ class ThingDoc:
 		if not 1 in self.tree:
 			self.fatal('Nothing was declared as @root')
 
-		# do BFS on dependency graph
+		# do iterative BFS on dependency graph
 		used = []
 		missing = []
 		queue = [1]
@@ -273,6 +273,7 @@ class ThingDoc:
 
 	def print_tree(self):
 
+		# perform iterative DFS on tree
 		queue = [(1, 0, -1)]
 		while queue:
 			(id, cnt, level) = queue.pop(0)
@@ -288,11 +289,12 @@ class ThingDoc:
 		print 'digraph thingdoc {'
 		print '\tnode [style=filled, colorscheme=pastel19];'
 		print '\tedge [dir=back];'
-		queue = [(1, 0, ['!'])]
+		# perform iterative DFS on tree
+		queue = [(1, 0, ['root'])]
 		while queue:
 			(id, cnt, path) = queue.pop(0)
 			if id == 1:
-				print '\t"!"[label="%s", fillcolor=9];' % self.tree[id].name
+				print '\t"root"[label="%s", fillcolor=9];' % self.tree[id].name
 			else:
 				name = self.tree[id].name
 				if cnt > 1:
@@ -312,6 +314,7 @@ class ThingDoc:
 
 	def extract_bom(self):
 
+		# perform iterative BFS on tree
 		queue = [ self.tree[1].using.items() ]
 		bom = {}
 		while queue:
@@ -332,6 +335,7 @@ class ThingDoc:
 
 	def extract_instructions(self, id):
 
+		# perform recursive DFS on tree
 		instr = []
 		for cid in self.tree[id].using:
 			instr += self.extract_instructions(cid)
@@ -399,11 +403,12 @@ class ThingDoc:
 def main():
 
 	parser = OptionParser(
-		version = '%prog ' + VERSION,
+		version = 'ThingDoc ' + VERSION,
 		epilog = 'If none of --bom, --html, --tex, --wiki are provided then all 4 types are generated.')
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'docs', help = 'use OUTDIR as output directory ("docs" by default)', metavar = 'OUTDIR')
 	parser.add_option('--imagedir', dest = 'imagedir', default = 'images', help = 'use IMAGEDIR directory (relative to OUTDIR) to look for images used in HTML and TeX ("images" by default)', metavar = 'IMAGEDIR')
+	parser.add_option('-l', '--lint', dest = 'lint', default = None, help = 'check syntax in FILE and exit', metavar = 'FILE')
 	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = 'generate Bill of Materials')
 	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = 'generate HTML (markup) documentation')
 	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = 'generate TeX documentation')
@@ -416,7 +421,16 @@ def main():
 	if not options.bom and not options.html and not options.tex and not options.wiki:
 		options.bom = options.html = options.tex = options.wiki = True
 
-	thingdoc = ThingDoc(options.indir, options.outdir, options.imagedir)
+	thingdoc = ThingDoc()
+
+	if options.lint:
+		if thingdoc.process_file(options.lint, {}):
+			print 'No syntax errors detected'
+			sys.exit(0)
+		else:
+			sys.exit(1)
+
+	thingdoc.parse(options.indir, options.outdir, options.imagedir)
 
 	if options.tree:
 		thingdoc.print_tree()
