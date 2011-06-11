@@ -48,328 +48,352 @@ class Thing:
 		self.desc = []          # description of the thing
 
 
-class Global:
+class ThingDoc:
 
-	pass
+	def __init__(self, indir, outdir, imagedir):
+
+		self.indir = indir
+		self.outdir = outdir
+		self.imagedir = imagedir
+
+		self.start = time.strftime("%Y/%m/%d %H:%M:%S")
+		self.datadir = os.path.dirname(os.path.abspath(__file__)) + '/data/'
+		self.jinja = Environment(loader = FileSystemLoader(self.datadir))
+
+		self.tree = self.generate_tree()
+
+		try:
+			os.makedirs(self.outdir)
+		except:
+			pass
+		try:
+			os.chdir(self.outdir)
+		except:
+			self.fatal('Cannot switch to OUTDIR: %s' % self.outdir)
+
+		self.check_tree()
+
+		self.bom = self.extract_bom()
+		self.instr = self.extract_instructions(1)
 
 
-def warning(string):
-	print >> sys.stderr, 'Warning:', string
+	def warning(self, string):
+		print >> sys.stderr, 'Warning:', string
 
 
-def error(string):
-	print >> sys.stderr, 'Error:', string
+	def error(self, string):
+		print >> sys.stderr, 'Error:', string
 
 
-def fatal(string):
-	print >> sys.stderr, 'Fatal:', string
-	sys.exit(1)
+	def fatal(self, string):
+		print >> sys.stderr, 'Fatal:', string
+		sys.exit(1)
 
 
-def process_file(absname, things):
+	def process_file(self, absname, things):
 
-	try:
-		f = open(absname, 'r')
-	except IOError:
-		fatal('Cannot open file %s' % absname)
+		try:
+			f = open(absname, 'r')
+		except IOError:
+			self.fatal('Cannot open file %s' % absname)
 
-	success = True
-	thing = None
-	linenum = 0
-	for line in f:
-		linenum += 1
-		if line.startswith('/**'):
-			if thing:
-				error('Start of the comment (/**) found but the previous one is still open (%s:%d)' % (absname, linenum))
-				success = False
-			thing = Thing()
-			continue
-		if line.startswith(' */'):
-			if not thing:
-				error('End of the comment ( */) found but there is no previous open one (%s:%d)' % (absname, linenum))
-				success = False
+		success = True
+		thing = None
+		linenum = 0
+		for line in f:
+			linenum += 1
+			if line.startswith('/**'):
+				if thing:
+					self.error('Start of the comment (/**) found but the previous one is still open (%s:%d)' % (absname, linenum))
+					success = False
+				thing = Thing()
 				continue
-			if not thing.id:
-				error('Missing mandatory attribute @id (%s:%d)' % (absname, linenum))
-				success = False
-			if not thing.name:
-				error('Missing mandatory attribute @name (%s:%d)' % (absname, linenum))
-				success = False
-			if thing.id and thing.name:
-				if thing.id in things:
-					if thing.id == 1:
-						fatal('More than one @root detected!')
+			if line.startswith(' */'):
+				if not thing:
+					self.error('End of the comment ( */) found but there is no previous open one (%s:%d)' % (absname, linenum))
+					success = False
+					continue
+				if not thing.id:
+					self.error('Missing mandatory attribute @id (%s:%d)' % (absname, linenum))
+					success = False
+				if not thing.name:
+					self.error('Missing mandatory attribute @name (%s:%d)' % (absname, linenum))
+					success = False
+				if thing.id and thing.name:
+					if thing.id in things:
+						if thing.id == 1:
+							self.fatal('More than one @root detected!')
+						else:
+							self.error("Duplicate thing id: '%s' (%s:%d)" % (thing.id, absname, linenum))
+							success = False
 					else:
-						error("Duplicate thing id: '%s' (%s:%d)" % (thing.id, absname, linenum))
-						success = False
-				else:
-					things[ thing.id ] = thing
-			thing = None
-			continue
-		if not thing:
-			continue  # not in a comment
-		if not line.startswith(' * '):
-			if line.rstrip() != ' *': # ignore lines ' *'
-				error('Comment line does not start with a " * " (%s:%d)' % (absname, linenum))
-				success = False
-			continue
-		(key, _, value) = line[3:].strip().partition(' ')
-		if   key == '@id':
-			thing.id = value
-		elif key == '@name':
-			thing.name = value
-		elif key == '@root':
-			thing.id = 1
-		elif key == '@common':
-			thing.common = True
-		elif key == '@assembled':
-			thing.assembled = True
-		elif key == '@since':
-			thing.since = value
-		elif key == '@category':
-			thing.category = value
-		elif key == '@type':
-			thing.type = value
-		elif key == '@step':
-			m = re.match('(.*)\[\[(.*)\]\]', value)
-			if m:
-				thing.step.append( {'text': m.group(1).strip(), 'img': m.group(2).strip()} )
-			else:
-				thing.step.append( {'text': value} )
-		elif key == '@comment':
-			thing.comment.append(value)
-		elif key == '@image':
-			thing.image = value
-		elif key == '@using':
-			(cnt, _, id) = value.partition(' ')
-			try:
-				cnt = int(cnt)
-			except:
-				id = cnt
-				cnt = 1
-			if id in thing.using:
-				thing.using[id] += cnt
-			else:
-				thing.using[id] = cnt
-		elif key == '@price':
-			thing.price = float(value)
-		elif key == '@weight':
-			thing.weight = float(value)
-		elif key == '@time':
-			thing.weight = float(time)
-		elif key.startswith('@'):
-			error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
-			success = False
-		else:
-			if key:
-				thing.desc.append((key + ' ' + value).strip())
-	f.close()
-	return success
-
-
-def generate_tree(indir):
-
-	things = {}
-	for root, dirs, files in os.walk(os.path.abspath(indir)):
-		dirs[:] = [d for d in dirs if not d.startswith('.')]
-		for name in files:
-			# skip if the file is not supported document
-			if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
+						things[ thing.id ] = thing
+				thing = None
 				continue
-			absname = os.path.join(root, name)
-			process_file(absname, things)
-	return things
-
-
-def check_tree(tree, imagedir):
-
-	if not 1 in tree:
-		fatal('Nothing was declared as @root')
-
-	# do BFS on dependency graph
-	used = []
-	missing = []
-	queue = [1]
-	while queue:
-		thing = queue.pop()
-		if not thing in tree.iterkeys():
-			if not thing in missing:
-				missing.append(thing)
-			continue
-		if not thing in used:
-			used.append(thing)
-			queue += tree[thing].using.keys()
-		# do various alterations of items
-		if os.path.exists('%s/%s.jpg' % (imagedir, thing)):
-			tree[thing].image = '%s.jpg' % thing
-		elif os.path.exists('%s/%s.png' % (imagedir, thing)):
-			tree[thing].image = '%s.png' % thing
-
-	# handle unused things
-	for thing in tree.iterkeys():
-		if not thing in used:
-			warning("Thing '%s' is defined but unused" % thing)
-
-	valid = True
-
-	# handle undefined things
-	for thing in missing:
-		parents = []
-		for k, v in tree.iteritems():
-			if thing in v.using:
-				parents.append(k == 1 and '@root' or ("'" + k + "'"))
-		parents.sort()
-		error("Thing '%s' is not defined and required by: %s" % (thing, ', '.join(parents)))
-		valid = False
-
-	# detect oriented cycles
-	todo = tree.keys()
-	while todo:
-		node = todo.pop()
-		stack = [node]
-		while stack:
-			top = stack[-1]
-			for node in tree[top].using:
-				if node in stack:
-					error("Oriented cycle detected: '%s'" % ("' -> '".join(stack[stack.index(node):] + [node])))
-					valid = False
-					todo = []
-					stack = []
-					break
-				if node in todo:
-					stack.append(node)
-					todo.remove(node)
-					break
-			else:
-				node = stack.pop()
-
-	if not valid:
-		fatal('Tree validation failed, see errors above')
-
-
-def print_tree(tree):
-
-	queue = [(1, 0, -1)]
-	while queue:
-		(id, cnt, level) = queue.pop(0)
-		if id == 1:
-			print '@root', '(' + tree[id].name + ')'
-		else:
-			print level * '  ', '-', str(cnt) + 'x', tree[id].id, '(' + tree[id].name + ')'
-		queue = map(lambda (id, cnt): (id, cnt, level + 1), tree[id].using.iteritems()) + queue
-
-
-def graphviz_tree(tree, bom):
-
-	print 'digraph thingdoc {'
-	print '\tnode [style=filled, colorscheme=pastel19];'
-	print '\tedge [dir=back];'
-	queue = [(1, 0, ['!'])]
-	while queue:
-		(id, cnt, path) = queue.pop(0)
-		if id == 1:
-			print '\t"!"[label="%s", fillcolor=9];' % tree[id].name
-		else:
-			name = tree[id].name
-			if cnt > 1:
-				name = '%dx %s' % (cnt, name)
-			if tree[id].common:
-				color = 1
-			elif not tree[id].category:
-				color = 8
-			else:
-				i = bom.keys().index(tree[id].category)
-				color = (i % 6) + 2 # 2-7
-			print '\t"%s"[label="%s", fillcolor=%d];' % ('/'.join(path), name, color)
-			print '\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path))
-		queue = map(lambda (id, cnt): (id, cnt, path + [k]), tree[id].using.iteritems()) + queue
-	print '}'
-
-
-def extract_bom(tree):
-
-	queue = [ tree[1].using.items() ]
-	bom = {}
-	while queue:
-		using = queue.pop(0)
-		for (id, cnt) in using:
-			thing = tree[id]
-			if thing.category in bom:
-				if id in bom[thing.category]:
-					bom[thing.category][id] += cnt
+			if not thing:
+				continue  # not in a comment
+			if not line.startswith(' * '):
+				if line.rstrip() != ' *': # ignore lines ' *'
+					self.error('Comment line does not start with a " * " (%s:%d)' % (absname, linenum))
+					success = False
+				continue
+			(key, _, value) = line[3:].strip().partition(' ')
+			if   key == '@id':
+				thing.id = value
+			elif key == '@name':
+				thing.name = value
+			elif key == '@root':
+				thing.id = 1
+			elif key == '@common':
+				thing.common = True
+			elif key == '@assembled':
+				thing.assembled = True
+			elif key == '@since':
+				thing.since = value
+			elif key == '@category':
+				thing.category = value
+			elif key == '@type':
+				thing.type = value
+			elif key == '@step':
+				m = re.match('(.*)\[\[(.*)\]\]', value)
+				if m:
+					thing.step.append( {'text': m.group(1).strip(), 'img': m.group(2).strip()} )
 				else:
-					bom[thing.category][id] = cnt
+					thing.step.append( {'text': value} )
+			elif key == '@comment':
+				thing.comment.append(value)
+			elif key == '@image':
+				thing.image = value
+			elif key == '@using':
+				(cnt, _, id) = value.partition(' ')
+				try:
+					cnt = int(cnt)
+				except:
+					id = cnt
+					cnt = 1
+				if id in thing.using:
+					thing.using[id] += cnt
+				else:
+					thing.using[id] = cnt
+			elif key == '@price':
+				thing.price = float(value)
+			elif key == '@weight':
+				thing.weight = float(value)
+			elif key == '@time':
+				thing.weight = float(time)
+			elif key.startswith('@'):
+				self.error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
+				success = False
 			else:
-				if thing.category:
-					bom[thing.category] = {id: cnt}
-			queue += [ map(lambda (a,b): (a,b*cnt), thing.using.items()) ]
-	return bom
+				if key:
+					thing.desc.append((key + ' ' + value).strip())
+		f.close()
+		return success
 
 
-def extract_instructions(tree, id):
+	def generate_tree(self):
 
-	instr = []
-	for cid in tree[id].using:
-		instr += extract_instructions(tree, cid)
-	if tree[id].step:
-		instr.append( [id] + tree[id].step )
-	return instr
-
-
-def generate_bom(tree, bom):
-
-	try:
-		f = open('bom.txt', 'w')
-	except:
-		error('Cannot create bom.txt')
-		return
-
-	template = Global.jinja.get_template('template.bom')
-	f.write(template.render(title = tree[1].name, start = Global.start, tree = tree, bom = bom))
-	f.close()
+		things = {}
+		for root, dirs, files in os.walk(os.path.abspath(self.indir)):
+			dirs[:] = [d for d in dirs if not d.startswith('.')]
+			for name in files:
+				# skip if the file is not supported document
+				if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
+					continue
+				absname = os.path.join(root, name)
+				self.process_file(absname, things)
+		return things
 
 
-def generate_html(tree, bom, instr, imagedir):
+	def check_tree(self):
 
-	try:
-		f = open('thingdoc.html', 'w')
-	except:
-		error('Cannot create thingdoc.html')
-		return
+		if not 1 in self.tree:
+			self.fatal('Nothing was declared as @root')
 
-	# copy static files
-	for i in ('iphone.css', 'jquery.js', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
-		shutil.copy(Global.datadir + i, i)
+		# do BFS on dependency graph
+		used = []
+		missing = []
+		queue = [1]
+		while queue:
+			thing = queue.pop()
+			if not thing in self.tree.iterkeys():
+				if not thing in missing:
+					missing.append(thing)
+				continue
+			if not thing in used:
+				used.append(thing)
+				queue += self.tree[thing].using.keys()
+			# do various alterations of items
+			if os.path.exists('%s/%s.jpg' % (self.imagedir, thing)):
+				self.tree[thing].image = '%s.jpg' % thing
+			elif os.path.exists('%s/%s.png' % (self.imagedir, thing)):
+				self.tree[thing].image = '%s.png' % thing
 
-	template = Global.jinja.get_template('template.html')
-	f.write(template.render(title = tree[1].name, titleimg = tree[1].image, titledesc=tree[1].desc, start = Global.start, tree = tree, bom = bom, instr = instr, imagedir = imagedir))
-	f.close()
+		# handle unused things
+		for thing in self.tree.iterkeys():
+			if not thing in used:
+				self.warning("Thing '%s' is defined but unused" % thing)
+
+		valid = True
+
+		# handle undefined things
+		for thing in missing:
+			parents = []
+			for k, v in self.tree.iteritems():
+				if thing in v.using:
+					parents.append(k == 1 and '@root' or ("'" + k + "'"))
+			parents.sort()
+			self.error("Thing '%s' is not defined and required by: %s" % (thing, ', '.join(parents)))
+			valid = False
+
+		# detect oriented cycles
+		todo = self.tree.keys()
+		while todo:
+			node = todo.pop()
+			stack = [node]
+			while stack:
+				top = stack[-1]
+				for node in self.tree[top].using:
+					if node in stack:
+						self.error("Oriented cycle detected: '%s'" % ("' -> '".join(stack[stack.index(node):] + [node])))
+						valid = False
+						todo = []
+						stack = []
+						break
+					if node in todo:
+						stack.append(node)
+						todo.remove(node)
+						break
+				else:
+					node = stack.pop()
+
+		if not valid:
+			self.fatal('Tree validation failed, see errors above')
 
 
-def generate_wiki(tree, bom):
+	def print_tree(self):
 
-	try:
-		f = open('thingdoc.wiki', 'w')
-	except:
-		error('Cannot create thingdoc.wiki')
-		return
+		queue = [(1, 0, -1)]
+		while queue:
+			(id, cnt, level) = queue.pop(0)
+			if id == 1:
+				print '@root', '(' + self.tree[id].name + ')'
+			else:
+				print level * '  ', '-', str(cnt) + 'x', self.tree[id].id, '(' + self.tree[id].name + ')'
+			queue = map(lambda (id, cnt): (id, cnt, level + 1), self.tree[id].using.iteritems()) + queue
 
-	template = Global.jinja.get_template('template.wiki')
-	f.write(template.render(tree = tree, bom = bom))
-	f.close()
+
+	def graphviz_tree(self):
+
+		print 'digraph thingdoc {'
+		print '\tnode [style=filled, colorscheme=pastel19];'
+		print '\tedge [dir=back];'
+		queue = [(1, 0, ['!'])]
+		while queue:
+			(id, cnt, path) = queue.pop(0)
+			if id == 1:
+				print '\t"!"[label="%s", fillcolor=9];' % self.tree[id].name
+			else:
+				name = self.tree[id].name
+				if cnt > 1:
+					name = '%dx %s' % (cnt, name)
+				if self.tree[id].common:
+					color = 1
+				elif not self.tree[id].category:
+					color = 8
+				else:
+					i = self.bom.keys().index(self.tree[id].category)
+					color = (i % 6) + 2 # 2-7
+				print '\t"%s"[label="%s", fillcolor=%d];' % ('/'.join(path), name, color)
+				print '\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path))
+			queue = map(lambda (id, cnt): (id, cnt, path + [id]), self.tree[id].using.iteritems()) + queue
+		print '}'
 
 
-def generate_tex(tree, bom, instr, imagedir):
+	def extract_bom(self):
 
-	try:
-		f = open('thingdoc.tex', 'w')
-	except:
-		error('Cannot create thingdoc.tex')
-		return
+		queue = [ self.tree[1].using.items() ]
+		bom = {}
+		while queue:
+			using = queue.pop(0)
+			for (id, cnt) in using:
+				thing = self.tree[id]
+				if thing.category in bom:
+					if id in bom[thing.category]:
+						bom[thing.category][id] += cnt
+					else:
+						bom[thing.category][id] = cnt
+				else:
+					if thing.category:
+						bom[thing.category] = {id: cnt}
+				queue += [ map(lambda (a, b): (a, b*cnt), thing.using.items()) ]
+		return bom
 
-	template = Global.jinja.get_template('template.tex')
-	f.write(template.render(title = tree[1].name, titleimg = tree[1].image, titledesc=tree[1].desc, start = Global.start, tree = tree, bom = bom, instr = instr, imagedir = imagedir))
-	f.close()
+
+	def extract_instructions(self, id):
+
+		instr = []
+		for cid in self.tree[id].using:
+			instr += self.extract_instructions(cid)
+		if self.tree[id].step:
+			instr.append( [id] + self.tree[id].step )
+		return instr
+
+
+	def generate_bom(self):
+
+		try:
+			f = open('bom.txt', 'w')
+		except:
+			self.error('Cannot create bom.txt')
+			return
+
+		template = self.jinja.get_template('template.bom')
+		f.write(template.render(title = self.tree[1].name, start = self.start, tree = self.tree, bom = self.bom))
+		f.close()
+
+
+	def generate_html(self):
+
+		try:
+			f = open('thingdoc.html', 'w')
+		except:
+			self.error('Cannot create thingdoc.html')
+			return
+
+		# copy static files
+		for i in ('iphone.css', 'jquery.js', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
+			shutil.copy(self.datadir + i, i)
+
+		template = self.jinja.get_template('template.html')
+		f.write(template.render(title = self.tree[1].name, titleimg = self.tree[1].image, titledesc = self.tree[1].desc, start = self.start, tree = self.tree, bom = self.bom, instr = self.instr, imagedir = self.imagedir))
+		f.close()
+
+
+	def generate_wiki(self):
+
+		try:
+			f = open('thingdoc.wiki', 'w')
+		except:
+			self.error('Cannot create thingdoc.wiki')
+			return
+
+		template = self.jinja.get_template('template.wiki')
+		f.write(template.render(tree = self.tree, bom = self.bom))
+		f.close()
+
+
+	def generate_tex(self):
+
+		try:
+			f = open('thingdoc.tex', 'w')
+		except:
+			self.error('Cannot create thingdoc.tex')
+			return
+
+		template = self.jinja.get_template('template.tex')
+		f.write(template.render(title = self.tree[1].name, titleimg = self.tree[1].image, titledesc = self.tree[1].desc, start = self.start, tree = self.tree, bom = self.bom, instr = self.instr, imagedir = self.imagedir))
+		f.close()
 
 
 def main():
@@ -380,7 +404,6 @@ def main():
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'docs', help = 'use OUTDIR as output directory ("docs" by default)', metavar = 'OUTDIR')
 	parser.add_option('--imagedir', dest = 'imagedir', default = 'images', help = 'use IMAGEDIR directory (relative to OUTDIR) to look for images used in HTML and TeX ("images" by default)', metavar = 'IMAGEDIR')
-	parser.add_option('-l', '--lint', dest = 'lint', default = None, help = 'check syntax in FILE and exit', metavar = 'FILE')
 	parser.add_option('-b', '--bom', action = 'store_true', dest = 'bom', default = False, help = 'generate Bill of Materials')
 	parser.add_option('-m', '--html', action = 'store_true', dest = 'html', default = False, help = 'generate HTML (markup) documentation')
 	parser.add_option('-t', '--tex', action = 'store_true', dest = 'tex', default = False, help = 'generate TeX documentation')
@@ -390,52 +413,27 @@ def main():
 
 	(options, _) = parser.parse_args()
 
-	if options.lint:
-		if process_file(options.lint, {}):
-			print 'No syntax errors detected'
-			sys.exit(0)
-		else:
-			sys.exit(1)
-
 	if not options.bom and not options.html and not options.tex and not options.wiki:
 		options.bom = options.html = options.tex = options.wiki = True
 
-	Global.start = time.strftime("%Y/%m/%d %H:%M:%S")
-	Global.datadir = os.path.dirname(os.path.abspath(__file__)) + '/data/'
-	Global.jinja = Environment(loader = FileSystemLoader(Global.datadir))
-
-	tree = generate_tree(options.indir)
-
-	try:
-		os.makedirs(options.outdir)
-	except:
-		pass
-	try:
-		os.chdir(options.outdir)
-	except:
-		fatal('Cannot switch to OUTDIR: %s' % options.outdir)
-
-	check_tree(tree, options.imagedir)
-
-	bom = extract_bom(tree)
-	instr = extract_instructions(tree, 1)
+	thingdoc = ThingDoc(options.indir, options.outdir, options.imagedir)
 
 	if options.tree:
-		print_tree(tree)
+		thingdoc.print_tree()
 		return
 
 	if options.graphviz:
-		graphviz_tree(tree, bom)
+		thingdoc.graphviz_tree()
 		return
 
 	if options.bom:
-		generate_bom(tree, bom)
+		thingdoc.generate_bom()
 	if options.html:
-		generate_html(tree, bom, instr, options.imagedir)
+		thingdoc.generate_html()
 	if options.tex:
-		generate_tex(tree, bom, instr, options.imagedir)
+		thingdoc.generate_tex()
 	if options.wiki:
-		generate_wiki(tree, bom)
+		thingdoc.generate_wiki()
 
 	print 'All Done!'
 
