@@ -10,13 +10,15 @@
 \begin{document}
 
 \maketitle
+\begin{center}
+{%- if titleimage -%}
+\includegraphics[width=8cm]{ {{- imagedir|el }}/{{ titleimage|el }}}
+{%- else %}
+\includegraphics[width=8cm]{logo.png}
+{%- endif %}
+\end{center}
 {% if titledesc -%}
 {{ titledesc|join(' ')|el }}
-{%- endif %}
-{%- if titleimage -%}
-\begin{center}
-\includegraphics[width=8cm]{ {{- imagedir|el }}/{{ titleimage|el }}}
-\end{center}
 {%- endif %}
 
 \newpage

@@ -25,12 +25,14 @@
     <div id="main">
 
     <div id="intro">
-      <h1>ThingDoc: {{ title|e }}</h1>
-{%- if titledesc %}
-      <p>{{ titledesc|join(' ')|e }}</p>
-{%- endif %}
+      <h1>{{ title|e }}</h1>
 {%- if titleimg -%}
       <img src="{{ imagedir|e }}/{{ titleimg|e }}" width="512" />
+{%- else %}
+      <img src="logo.png" width="435" />
+{%- endif %}
+{%- if titledesc %}
+      <p>{{ titledesc|join(' ')|e }}</p>
 {%- endif %}
     </div>
 
