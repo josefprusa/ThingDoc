@@ -4,18 +4,18 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue}
-\title{ {{- title }} Documentation}
+\title{ {{- title|el }} Documentation}
 \author{ThingDoc}
 
 \begin{document}
 
 \maketitle
 {% if titledesc -%}
-{{ titledesc|join(' ') }}
+{{ titledesc|join(' ')|el }}
 {%- endif %}
 {%- if titleimage -%}
 \begin{center}
-\includegraphics[width=8cm]{ {{- imagedir }}/{{ titleimage }}}
+\includegraphics[width=8cm]{ {{- imagedir|el }}/{{ titleimage|el }}}
 \end{center}
 {%- endif %}
 
@@ -28,13 +28,13 @@
 \section{Bill of Materials}
 List of things you need to build the machine divided by categories.
 {% for category in bom %}
-\subsection{ {{- category }}}
+\subsection{ {{- category|el }}}
 \begin{itemize}
 {% for id, cnt in bom[category].iteritems() %}
 {%- if tree[id].common -%}
-\item {{ cnt }}x {{ tree[id].name }}
+\item {{ cnt|el }}x {{ tree[id].name|el }}
 {% else -%}
-\item {{ cnt }}x \hyperlink{thing_{{ id }}}{ {{- tree[id].name }}}
+\item {{ cnt|el }}x \hyperlink{thing_{{ id|el }}}{ {{- tree[id].name|el }}}
 {% endif %}
 {%- endfor -%}
 \end{itemize}
@@ -45,12 +45,12 @@ List of things you need to build the machine divided by categories.
 List of things and their descriptions.
 {% for thing in tree.itervalues() %}
 {%- if thing.id != 1 and thing.common == False %}
-\hypertarget{thing_{{ thing.id }}}{\subsection{ {{- thing.name}}}}
+\hypertarget{thing_{{ thing.id|el }}}{\subsection{ {{- thing.name|el }}}}
 {%- if thing.desc %}
-{{ thing.desc|join('\n') }}
+{{ thing.desc|join('\n')|el }}
 {%- endif %}
 {%- if thing.image %}
-\includegraphics[width=4cm]{ {{- imagedir }}/{{ thing.image }}}
+\includegraphics[width=4cm]{ {{- imagedir|el }}/{{ thing.image|el }}}
 {%- endif %}
 {% endif -%}
 {% endfor %}
@@ -58,15 +58,15 @@ List of things and their descriptions.
 
 \section{Assembly Instructions}
 {% for i in instr %}
-\subsection{Assemble {{ tree[i[0]].name }}}
+\subsection{Assemble {{ tree[i[0]].name|el }}}
 {%- if tree[i[0]].using %}
 Things needed:
 \begin{itemize}
 {%- for id, cnt in tree[i[0]].using.iteritems() %}
 {%- if tree[id].common %}
-\item {{ cnt }}x {{ tree[id].name }}
+\item {{ cnt|el }}x {{ tree[id].name|el }}
 {%- else %}
-\item {{ cnt }}x \hyperlink{thing_{{ id }}}{ {{- tree[id].name }}}
+\item {{ cnt|el }}x \hyperlink{thing_{{ id|el }}}{ {{- tree[id].name|el }}}
 {%- endif %}
 {%- endfor %}
 \end{itemize}
@@ -75,9 +75,9 @@ Steps:
 \begin{enumerate}
 {% for j in i[1:] -%}
 {%- if j.img -%}
-\item {{ j.text }}\\ \includegraphics[width=4cm]{ {{- imagedir }}/{{ j.img }}}
+\item {{ j.text|el }}\\ \includegraphics[width=4cm]{ {{- imagedir|el }}/{{ j.img|el }}}
 {%- else -%}
-\item {{ j.text }}
+\item {{ j.text|el }}
 {%- endif %}
 {% endfor -%}
 \end{enumerate}

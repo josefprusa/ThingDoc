@@ -49,6 +49,18 @@ class Thing:
 		self.desc = []          # description of the thing
 
 
+def escape_latex(value):
+	if isinstance(value, str):
+		value = value.replace('\\ ', '@textbackslash@ ').replace('\\', '\\textbackslash ').replace('@textbackslash@', '\\textbackslash\\')
+		value = value.replace('^ ', '\\textasciicircum\\ ').replace('^', '\\textasciicircum ')
+		value = value.replace('~ ', '\\textasciitilde\\ ').replace('~', '\\textasciitilde ')
+		value = value.replace('| ', '\\textbar\\ ').replace('|', '\\textbar ')
+		for i in ('$', '%', '_', '#', '{', '}', '&'):
+			value = value.replace(i, '\\' + i)
+		return value
+	else:
+		return value
+
 class ThingDoc:
 
 	def parse(self, indir, outdir, imagedir):
@@ -60,6 +72,8 @@ class ThingDoc:
 		self.start = time.strftime('%Y/%m/%d %H:%M:%S')
 		self.datadir = os.path.dirname(os.path.abspath(__file__)) + '/data/'
 		self.jinja = Environment(loader = FileSystemLoader(self.datadir))
+		# register latex escaper
+		self.jinja.filters['el'] = escape_latex
 
 		self.tree = self.generate_tree()
 
