@@ -384,7 +384,7 @@ class ThingDoc:
 			shutil.copy(self.datadir + i, i)
 
 		template = self.jinja.get_template('template.html')
-		f.write(template.render(title = self.tree[1].name, titleimg = self.tree[1].image, titledesc = self.tree[1].desc, start = self.start, tree = self.tree, bom = self.bom, instr = self.instr, imagedir = self.imagedir))
+		f.write(template.render(title = self.tree[1].name, unique="153431534841", titleimg = self.tree[1].image, titledesc = self.tree[1].desc, start = self.start, tree = self.tree, bom = self.bom, instr = self.instr, imagedir = self.imagedir))
 		f.close()
 
 
