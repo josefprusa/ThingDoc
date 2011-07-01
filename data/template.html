@@ -82,28 +82,29 @@
       <h2>Assembly Instructions</h2>
 {% for i in instr %}
       <div class="subassembly"><h3>Assemble {{ tree[i[0]].name|e }}</h3>
+      <div class="stuff">
 {%- if tree[i[0]].using %}
         <p>Things needed:</p>
-        <ul>
+        
+      	<table id="bomtable">
 {%- for id, cnt in tree[i[0]].using.iteritems() %}
-{%- if tree[id].common %}
-          <li>{{ cnt|e }}x {{ tree[id].name|e }}</li>
-{%- else %}
-          <li>{{ cnt|e }}x <a href="#thing_{{ id|e }}">{{ tree[id].name|e }}</a></li>
-{%- endif %}
+          <tr><td class="right"><strong>{{ cnt|e }} x</strong></td>
+          
+			<td><a href="#thing_{{ id|e }}" rel="facebox" >{{ tree[id].name|e }}</a></td></tr>
 {%- endfor %}
-        </ul>
+</table>
 {% endif %}
         <p>Steps:</p>
         <ol>
 {%- for j in i[1:] %}
 {%- if j.img %}
-          <li>{{ j.text|e }}<br/><img src="{{ imagedir|e }}/{{ j.img|e }}" width="256" /></li>
+          <li>{{ j.text|e }}<br/><a href="{{ imagedir|e }}/{{ j.img|e }}" rel="facebox"><img src="{{ imagedir|e }}/{{ j.img|e }}" width="256" /></a></li>
 {%- else %}
           <li>{{ j.text|e }}</li>
 {%- endif %}
 {%- endfor %}
         </ol>
+        </div>
    </div>
 {% endfor %}
     </div>
