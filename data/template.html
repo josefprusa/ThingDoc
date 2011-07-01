@@ -63,22 +63,25 @@
       <h2>Things Overview</h2>
       <p>List of things and their descriptions</p>
 {% for thing in tree.itervalues() %}
+<div id="thing_{{ thing.id|e }}" class="thing_overview">
 {%- if thing.id != 1 %}
-      <h3 id="thing_{{ thing.id|e }}">{{ thing.name|e }}</h3>
+      <h3>{{ thing.name|e }}</h3>
 {%- if thing.desc %}
         <p>{{ thing.desc|join(' ')|e }}</p>
 {%- endif %}
 {%- if thing.image %}
         <img src="{{ imagedir|e }}/{{ thing.image|e }}" width="256" />
+       
 {%- endif %}
 {% endif -%}
+</div>
 {% endfor %}
     </div>
 
     <div id="assembly">
       <h2>Assembly Instructions</h2>
 {% for i in instr %}
-      <h3>Assemble {{ tree[i[0]].name|e }}</h3>
+      <div class="subassembly"><h3>Assemble {{ tree[i[0]].name|e }}</h3>
 {%- if tree[i[0]].using %}
         <p>Things needed:</p>
         <ul>
@@ -101,6 +104,7 @@
 {%- endif %}
 {%- endfor %}
         </ol>
+   </div>
 {% endfor %}
     </div>
 
