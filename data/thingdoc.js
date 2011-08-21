@@ -137,6 +137,7 @@ jQuery(document).ready(function() {
  jQuery('a[rel*=facebox]').facebox();
  // active button from cookie
 	var button = $.cookie(unique + "_button");
+	alert(button);
 	if(button == "home"){
 	homebutton();
 	}else if(button == "bom"){
