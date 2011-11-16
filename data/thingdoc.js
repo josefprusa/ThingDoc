@@ -11,14 +11,21 @@ var iPhone = false;
     }else if ((uagent.search("ipod") > -1)){
        iPhone = true;
     }
+    
+var ua = navigator.userAgent.toLowerCase();
+var android = ua.indexOf("android") > -1
 
-if(iPhone){
-window.onscroll = function() {
-  checkMenu();};
-}
-  
+/*
+alert(ua);
+alert("iPhone"+iPhone);
+alert("android "+android);
+*/
 
 $(document).ready(function(){
+	if(iPhone || android){
+		$('#assemblymenu').toggle();
+	}
+	
 	function homebutton(){
 		$("#bom").css('display', 'none');
 		$("#things").css('display', 'none');
@@ -61,25 +68,37 @@ $(document).ready(function(){
 		$('#assemblybutton').removeClass("white").addClass("gray");
     	$('#homebutton').removeClass("gray").addClass("white");
     	$('#thingsbutton').removeClass("gray").addClass("white");
+    	if(iPhone || android){
+    		$('#genericmenu').toggle();
+    		$('#assemblymenu').toggle();
+    	}
 		$.cookie(unique + "_button", "assembly");
 
 	}
 
 	$("#homebutton").click(function(){
 		homebutton();
+		onCompletion();
+
 	});
 	
 	$("#bombutton").click(function(){
 		bombutton();
+		onCompletion();
+
 	});
 	
 	
 	$("#thingsbutton").click(function(){
 		thingsbutton();
+		onCompletion();
+
 	});
 
 	$("#assemblybutton").click(function(){
 		assemblybutton();
+		onCompletion();
+
 
 	});
 	
@@ -90,6 +109,44 @@ $(document).ready(function(){
 	var n = $(".subassembly").length;
 	$("#assemblyCount").html(n);
 	
+	var actualAssembly = 1;
+	
+	
+	function increaseActualAssembly(){
+		$(".subassembly:eq("+ (actualAssembly-1) +")").css('display', 'none');
+		if (actualAssembly >= n){
+			
+		}else{
+			actualAssembly++;
+		}
+		$(".subassembly:eq("+ (actualAssembly-1) +")").css('display', 'block');
+		$("#assemblyActual").html(actualAssembly);
+		
+	}
+	
+	function decreaseActualAssembly(){
+	
+		$(".subassembly:eq("+ (actualAssembly-1) +")").css('display', 'none');
+		if (actualAssembly <= 1){
+			
+		}else{
+			actualAssembly--;
+		}
+		$(".subassembly:eq("+ (actualAssembly-1) +")").css('display', 'block');
+		$("#assemblyActual").html(actualAssembly);
+	}
+	
+	$("#increaseAssembly").click(function(){
+		increaseActualAssembly();
+		onCompletion();
+	});
+	$("#decreaseAssembly").click(function(){
+		decreaseActualAssembly();
+		onCompletion();
+
+	});
+	
+	//$.cookie(unique + "_button", "assembly");
 	
 	//BOM checkboxes stuff
 	$('.bom_checkbox').each(function(index) {
@@ -127,17 +184,10 @@ $(document).ready(function(){
     }
   }
   checkCompleteBOM();
-
-
-});
-
-
-
-jQuery(document).ready(function() {
- jQuery('a[rel*=facebox]').facebox();
+  
+  jQuery('a[rel*=facebox]').facebox();
  // active button from cookie
 	var button = $.cookie(unique + "_button");
-	alert(button);
 	if(button == "home"){
 	homebutton();
 	}else if(button == "bom"){
@@ -147,7 +197,9 @@ jQuery(document).ready(function() {
 	}else if(button == "assembly"){
 	assemblybutton();
 	}
- });
+
+
+});
 
 	
      
