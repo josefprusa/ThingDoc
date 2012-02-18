@@ -62,6 +62,8 @@ def escape_latex(value):
 		return value
 
 class ThingDoc:
+	
+	parse_only_files = False;
 
 	def parse(self, indir, outdir, imagedir):
 
@@ -206,14 +208,19 @@ class ThingDoc:
 
 
 	def generate_tree(self):
-
+		print self.parse_only_files
 		things = {}
 		for root, dirs, files in os.walk(os.path.abspath(self.indir)):
 			dirs[:] = [d for d in dirs if not d.startswith('.')]
 			for name in files:
 				# skip if the file is not supported document
+				
 				if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
 					continue
+				if self.parse_only_files is not False:
+					if not name in self.parse_only_files:
+						continue
+				print name
 				absname = os.path.join(root, name)
 				self.process_file(absname, things)
 		return things
@@ -417,9 +424,12 @@ class ThingDoc:
 		f.write(template.render(title = self.tree[1].name, titleimg = self.tree[1].image, titledesc = self.tree[1].desc, start = self.start, tree = self.tree, bom = self.bom, instr = self.instr, imagedir = self.imagedir))
 		f.close()
 
+parse_only_temp = False;
+
+def parse_only(option, opt, value, parser):
+	parse_only_temp = value.split(' ')
 
 def main():
-
 	parser = OptionParser(
 		version = 'ThingDoc ' + VERSION,
 		epilog = 'If none of --bom, --html, --tex, --wiki are provided then all 4 types are generated.')
@@ -433,6 +443,7 @@ def main():
 	parser.add_option('-w', '--wiki', action = 'store_true', dest = 'wiki', default = False, help = 'generate Wiki documentation')
 	parser.add_option('-p', '--print', action = 'store_true', dest = 'tree', default = False, help = 'print tree of things and exit (text mode)')
 	parser.add_option('-g', '--graph', action = 'store_true', dest = 'graphviz', default = False, help = 'generate graphviz document')
+	parser.add_option('-x', '--parse-only', type='string', action='callback', callback=parse_only)
 
 	(options, _) = parser.parse_args()
 
@@ -440,6 +451,8 @@ def main():
 		options.bom = options.html = options.tex = options.wiki = True
 
 	thingdoc = ThingDoc()
+	
+	thingdoc.parse_only_files = parse_only_temp
 
 	if options.lint:
 		if thingdoc.process_file(options.lint, {}):
