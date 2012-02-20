@@ -208,7 +208,6 @@ class ThingDoc:
 
 
 	def generate_tree(self):
-		print self.parse_only_files
 		things = {}
 		for root, dirs, files in os.walk(os.path.abspath(self.indir)):
 			dirs[:] = [d for d in dirs if not d.startswith('.')]
@@ -427,7 +426,8 @@ class ThingDoc:
 parse_only_temp = False;
 
 def parse_only(option, opt, value, parser):
-	parse_only_temp = value.split(' ')
+	global parse_only_temp
+	parse_only_temp = value.split(',')
 
 def main():
 	parser = OptionParser(
@@ -451,7 +451,6 @@ def main():
 		options.bom = options.html = options.tex = options.wiki = True
 
 	thingdoc = ThingDoc()
-	
 	thingdoc.parse_only_files = parse_only_temp
 
 	if options.lint:
