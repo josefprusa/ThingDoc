@@ -384,6 +384,10 @@ class ThingDoc:
 		except:
 			self.error('Cannot create documentation.html')
 			return
+		try:		
+			os.mkdir('html_data')	
+		except: 	
+			pass
 
 		# copy static files
 		for i in ('facebox.css', 'facebox.js', 'iphone.css', 'jquery.js', 'jquery.cookie.js', 'logo.png', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
