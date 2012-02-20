@@ -216,7 +216,7 @@ class ThingDoc:
 				
 				if not os.path.splitext(name)[1] in ['.scad', '.tdoc']:
 					continue
-				if self.parse_only_files is not False:
+				if self.parse_only_files is not False:			
 					if not name in self.parse_only_files:
 						continue
 				print name
@@ -427,7 +427,10 @@ parse_only_temp = False;
 
 def parse_only(option, opt, value, parser):
 	global parse_only_temp
-	parse_only_temp = value.split(',')
+	parse_only_temp = [i.split("/")[-1] for i in value.split(',')]
+		
+	
+			
 
 def main():
 	parser = OptionParser(
