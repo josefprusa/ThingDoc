@@ -18,10 +18,10 @@ setup(
     author='Josef Prusa',
     author_email='iam@josefprusa.cz',
     url='https://github.com/josefprusa/ThingDoc',
-    packages = ['thingdoc'],
-    scripts=['bin/thingdoc'],
+    packages=['thingdoc'],
+    entry_points={'console_scripts': ['thingdoc = thingdoc.thingdoc:main']},
     install_requires=install_requires,
-    include_package_data = True,
-    zip_safe = False,
+    include_package_data=True,
+    zip_safe=False,
 )
 
