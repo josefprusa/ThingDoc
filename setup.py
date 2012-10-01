@@ -21,5 +21,7 @@ setup(
     packages = ['thingdoc'],
     scripts=['bin/thingdoc'],
     install_requires=install_requires,
+    include_package_data = True,
+    zip_safe = False,
 )
 
