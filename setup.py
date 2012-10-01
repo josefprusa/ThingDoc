@@ -19,7 +19,7 @@ setup(
     author_email='iam@josefprusa.cz',
     url='https://github.com/josefprusa/ThingDoc',
     packages=['thingdoc'],
-    entry_points={'console_scripts': ['thingdoc = thingdoc.thingdoc:main']},
+    entry_points={'console_scripts': ['thingdoc = thingdoc.main:main']},
     install_requires=install_requires,
     include_package_data=True,
     zip_safe=False,

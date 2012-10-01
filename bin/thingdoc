@@ -6,7 +6,7 @@ from os import path
 base_dir = path.abspath(path.dirname(path.dirname(__file__)))
 sys.path.insert(0, base_dir)
 
-from thingdoc.thingdoc import main
+from thingdoc.main import main
 
 if __name__ == '__main__':
     main()
