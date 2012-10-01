@@ -18,8 +18,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-VERSION = '1.0'
-
 import os
 import re
 import shutil
@@ -27,6 +25,8 @@ import sys
 import time
 from jinja2 import Environment, FileSystemLoader
 from optparse import OptionParser
+
+from thingdoc import version
 
 
 class Thing:
@@ -438,7 +438,7 @@ def parse_only(option, opt, value, parser):
 
 def main():
 	parser = OptionParser(
-		version = 'ThingDoc ' + VERSION,
+		version = 'ThingDoc %s' % version.__versionstr__,
 		epilog = 'If none of --bom, --html, --tex, --wiki are provided then all 4 types are generated.')
 	parser.add_option('-i', '--indir', dest = 'indir', default = '.', help = 'start scanning in INDIR directory (current by default)', metavar = 'INDIR')
 	parser.add_option('-o', '--outdir', dest = 'outdir', default = 'docs', help = 'use OUTDIR as output directory ("docs" by default)', metavar = 'OUTDIR')

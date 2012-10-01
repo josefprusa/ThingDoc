@@ -1,17 +1,25 @@
 from setuptools import setup
 from os import path
+import imp
 
-f = open(path.join(path.dirname(__file__), 'README'))
+base = path.dirname(__file__)
+
+f = open(path.join(base, 'README'))
 long_description = f.read().strip()
 f.close()
 
-f = open(path.join(path.dirname(__file__), 'requirements.txt'))
+f = open(path.join(base, 'requirements.txt'))
 install_requires = f.read().strip()
+f.close()
+
+f = open(path.join(base, 'thingdoc', 'version.py'))
+version = imp.new_module('version')
+exec(f.read(), version.__dict__)
 f.close()
 
 setup(
     name='ThingDoc',
-    version='1.0',
+    version=version.__versionstr__,
     description='ThingDoc is a clever things comment parser.',
     long_description=long_description,
     license='GNU GPLv3',
