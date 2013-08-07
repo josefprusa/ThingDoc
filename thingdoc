@@ -196,7 +196,7 @@ class ThingDoc:
 			elif key == '@weight':
 				thing.weight = float(value)
 			elif key == '@time':
-				thing.weight = float(time)
+				thing.time = float(value)
 			elif key.startswith('@'):
 				self.error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
 				success = False
@@ -341,7 +341,9 @@ class ThingDoc:
 			using = queue.pop(0)
 			for (id, cnt) in using:
 				thing = self.tree[id]
-				if thing.category in bom:
+				if thing.assembled:
+					pass
+				elif thing.category in bom:
 					if id in bom[thing.category]:
 						bom[thing.category][id] += cnt
 					else:
