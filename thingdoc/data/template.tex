@@ -32,7 +32,7 @@ List of things you need to build the machine divided by categories.
 {% for category in bom %}
 \subsection{ {{- category|el }}}
 \begin{itemize}
-{% for id, cnt in bom[category].iteritems() %}
+{% for id, cnt in bom[category].items() %}
 {%- if tree[id].common -%}
 \item {{ cnt|el }}x {{ tree[id].name|el }}
 {% else -%}
@@ -45,7 +45,7 @@ List of things you need to build the machine divided by categories.
 
 \section{Things Overview}
 List of things and their descriptions.
-{% for thing in tree.itervalues() %}
+{% for thing in tree.items() %}
 {%- if thing.id != 1 and thing.common == False %}
 \hypertarget{thing_{{ thing.id|el }}}{\subsection{ {{- thing.name|el }}}}
 {%- if thing.desc %}
@@ -64,7 +64,7 @@ List of things and their descriptions.
 {%- if tree[i[0]].using %}
 Things needed:
 \begin{itemize}
-{%- for id, cnt in tree[i[0]].using.iteritems() %}
+{%- for id, cnt in tree[i[0]].using.items() %}
 {%- if tree[id].common %}
 \item {{ cnt|el }}x {{ tree[id].name|el }}
 {%- else %}

@@ -8,7 +8,7 @@
 ! scope="col" | Type
 ! scope="col" class="unsortable" | Comments
 ! scope="col" class="unsortable" | Diagram
-{% for id, cnt in bom[category].iteritems() -%}
+{% for id, cnt in bom[category].items() -%}
 |-
 | {{ cnt }} || {{ tree[id].name }} || {{ tree[id].type }} || {{ tree[id].comment|join('; ') if tree[id].comment }} ||{{ ' [[File:%s|50px]]' % tree[id].image if tree[id].image }}
 {% endfor -%}
