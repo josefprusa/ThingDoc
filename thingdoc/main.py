@@ -32,7 +32,7 @@ from thingdoc import version
 class Thing:
 
 	def __init__(self):
-		self.id = None          # unique id, root has id = 0 (numeric) which cannot be overriden
+		self.id = None          # unique id, root has id = 1 (numeric) which cannot be overriden
 		self.name = None        # name of the thing
 		self.common = False     # is this thing common?
 		self.assembled = False  # is this thing assembled?
@@ -227,7 +227,9 @@ class ThingDoc:
 
 	def check_tree(self):
 
-		if not 1 in self.tree:
+		print(self.tree)
+		for thing in iter(self.tree.values()):
+		    if not thing.id == 1 :
 			self.fatal('Nothing was declared as @root')
 
 		# do iterative BFS on dependency graph
