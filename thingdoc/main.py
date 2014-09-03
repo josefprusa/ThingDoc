@@ -227,7 +227,6 @@ class ThingDoc:
 
 	def check_tree(self):
 
-		print(self.tree)
 		if not filter(lambda thing: thing.id == 1, iter(self.tree.values())):
 			self.fatal('Nothing was declared as @root')
 
@@ -242,7 +241,6 @@ class ThingDoc:
 					missing.append(thing)
 				continue
 			if not thing in used:
-				print(self.tree[thing].using.keys())
 				used.append(thing)
 				queue += list(self.tree[thing].using.keys())
 			# do various alterations of items
@@ -349,8 +347,7 @@ class ThingDoc:
 					else:
 						bom[thing.category][id] = cnt
 				else:
-					if thing.category:
-						bom[thing.category] = {id: cnt}
+					bom[thing.category] = {id: cnt}
 				queue += [ [(a_b[0], a_b[1]*cnt) for a_b in list(thing.using.items())] ]
 		return bom
 
