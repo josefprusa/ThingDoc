@@ -74,9 +74,9 @@
 	<div id="things">
 		<h2>Things Overview</h2>
 		<p>List of things and their descriptions</p>
-		{% for thing in tree.items() %}
+		{% for (id, thing) in tree.items() %}
 			<div id="thing_{{ thing.id|e }}" class="thing_overview" >
-				{%- if thing.id != 1 %}
+				{% if id != 1 %}
 					<h3>{{ thing.name|e }}</h3>
 					<div class="stuff">
 						{%- if thing.desc %}
@@ -86,7 +86,7 @@
 						        <img src="{{ imagedir|e }}/{{ thing.image|e }}" width="256" />
 						{%- endif %}
 					</div>
-				{% endif -%}
+				{% endif %}
 			</div>
 		{% endfor %}
 	</div>
