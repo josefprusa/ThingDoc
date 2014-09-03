@@ -228,8 +228,7 @@ class ThingDoc:
 	def check_tree(self):
 
 		print(self.tree)
-		for thing in iter(self.tree.values()):
-		    if not thing.id == 1 :
+		if not filter(lambda thing: thing.id == 1, iter(self.tree.values())):
 			self.fatal('Nothing was declared as @root')
 
 		# do iterative BFS on dependency graph

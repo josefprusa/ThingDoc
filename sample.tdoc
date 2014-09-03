@@ -1,8 +1,7 @@
 /**
  * Printer
  *
- * @root RepRap
- * @id RepRap
+ * @root 
  * @name RepRap
  * @step Make sure you have [frame] ready.
  * @step Second you make the [x-axis].
