@@ -94,15 +94,15 @@ class ThingDoc:
 
 
 	def warning(self, string):
-		print >> sys.stderr, 'Warning:', string
+		print('Warning:', string, file=sys.stderr)
 
 
 	def error(self, string):
-		print >> sys.stderr, 'Error:', string
+		print('Error:', string, file=sys.stderr)
 
 
 	def fatal(self, string):
-		print >> sys.stderr, 'Fatal:', string
+		print('Fatal:', string, file=sys.stderr)
 		sys.exit(1)
 
 
@@ -219,7 +219,7 @@ class ThingDoc:
 				if self.parse_only_files is not False:			
 					if not name in self.parse_only_files:
 						continue
-				print name
+				print(name)
 				absname = os.path.join(root, name)
 				self.process_file(absname, things)
 		return things
@@ -236,13 +236,13 @@ class ThingDoc:
 		queue = [1]
 		while queue:
 			thing = queue.pop()
-			if not thing in self.tree.iterkeys():
+			if not thing in iter(self.tree.keys()):
 				if not thing in missing:
 					missing.append(thing)
 				continue
 			if not thing in used:
 				used.append(thing)
-				queue += self.tree[thing].using.keys()
+				queue += list(self.tree[thing].using.keys())
 			# do various alterations of items
 			if os.path.exists('%s/%s.jpg' % (self.imagedir, thing)):
 				self.tree[thing].image = '%s.jpg' % thing
@@ -250,7 +250,7 @@ class ThingDoc:
 				self.tree[thing].image = '%s.png' % thing
 
 		# handle unused things
-		for thing in self.tree.iterkeys():
+		for thing in self.tree.keys():
 			if not thing in used:
 				self.warning("Thing '%s' is defined but unused" % thing)
 
@@ -259,7 +259,7 @@ class ThingDoc:
 		# handle undefined things
 		for thing in missing:
 			parents = []
-			for k, v in self.tree.iteritems():
+			for k, v in self.tree.items():
 				if thing in v.using:
 					parents.append(k == 1 and '@root' or ("'" + k + "'"))
 			parents.sort()
@@ -267,7 +267,7 @@ class ThingDoc:
 			valid = False
 
 		# detect oriented cycles
-		todo = self.tree.keys()
+		todo = list(self.tree.keys())
 		while todo:
 			node = todo.pop()
 			stack = [node]
@@ -298,23 +298,23 @@ class ThingDoc:
 		while queue:
 			(id, cnt, level) = queue.pop(0)
 			if id == 1:
-				print '@root', '(' + self.tree[id].name + ')'
+				print('@root', '(' + self.tree[id].name + ')')
 			else:
-				print level * '  ', '-', str(cnt) + 'x', self.tree[id].id, '(' + self.tree[id].name + ')'
-			queue = map(lambda (id, cnt): (id, cnt, level + 1), self.tree[id].using.iteritems()) + queue
+				print(level * '  ', '-', str(cnt) + 'x', self.tree[id].id, '(' + self.tree[id].name + ')')
+			queue = [(id_cnt[0], id_cnt[1], level + 1) for id_cnt in iter(self.tree[id].using.items())] + queue
 
 
 	def graphviz_tree(self):
 
-		print 'digraph thingdoc {'
-		print '\tnode [style=filled, colorscheme=pastel19];'
-		print '\tedge [dir=back];'
+		print('digraph thingdoc {')
+		print('\tnode [style=filled, colorscheme=pastel19];')
+		print('\tedge [dir=back];')
 		# perform iterative DFS on tree
 		queue = [(1, 0, ['root'])]
 		while queue:
 			(id, cnt, path) = queue.pop(0)
 			if id == 1:
-				print '\t"root"[label="%s", fillcolor=9];' % self.tree[id].name
+				print('\t"root"[label="%s", fillcolor=9];' % self.tree[id].name)
 			else:
 				name = self.tree[id].name
 				if cnt > 1:
@@ -324,18 +324,18 @@ class ThingDoc:
 				elif not self.tree[id].category:
 					color = 8
 				else:
-					i = self.bom.keys().index(self.tree[id].category)
+					i = list(self.bom.keys()).index(self.tree[id].category)
 					color = (i % 6) + 2 # 2-7
-				print '\t"%s"[label="%s", fillcolor=%d];' % ('/'.join(path), name, color)
-				print '\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path))
-			queue = map(lambda (id, cnt): (id, cnt, path + [id]), self.tree[id].using.iteritems()) + queue
-		print '}'
+				print('\t"%s"[label="%s", fillcolor=%d];' % ('/'.join(path), name, color))
+				print('\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path)))
+			queue = [(id_cnt1[0], id_cnt1[1], path + [id_cnt1[0]]) for id_cnt1 in iter(self.tree[id].using.items())] + queue
+		print('}')
 
 
 	def extract_bom(self):
 
 		# perform iterative BFS on tree
-		queue = [ self.tree[1].using.items() ]
+		queue = [ list(self.tree[1].using.items()) ]
 		bom = {}
 		while queue:
 			using = queue.pop(0)
@@ -349,7 +349,7 @@ class ThingDoc:
 				else:
 					if thing.category:
 						bom[thing.category] = {id: cnt}
-				queue += [ map(lambda (a, b): (a, b*cnt), thing.using.items()) ]
+				queue += [ [(a_b[0], a_b[1]*cnt) for a_b in list(thing.using.items())] ]
 		return bom
 
 
@@ -462,7 +462,7 @@ def main():
 
 	if options.lint:
 		if thingdoc.process_file(options.lint, {}):
-			print 'No syntax errors detected'
+			print('No syntax errors detected')
 			sys.exit(0)
 		else:
 			sys.exit(1)
@@ -486,7 +486,7 @@ def main():
 	if options.wiki:
 		thingdoc.generate_wiki()
 
-	print 'All Done!'
+	print('All Done!')
 
 
 if __name__ == '__main__':
