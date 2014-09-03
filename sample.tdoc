@@ -3,6 +3,8 @@
  *
  * @root 
  * @name RepRap
+ * @using 1 frame
+ * @using 1 x-axis
  * @step Make sure you have [frame] ready.
  * @step Second you make the [x-axis].
  */
@@ -12,7 +14,6 @@
  *
  * @id frame
  * @name frame
- * @using 6 frame-vertex
  * @step Do the side triangles.
  * @step Connect triangles into frame.
  */
@@ -22,9 +23,7 @@
  *
  * @id x-axis
  * @name x-axis
- * @using 1 x-end-motor
- * @using 1 x-end-idler
- * @step Prepare [x-end-motor]
- * @step Prepare [x-end-idler]
+ * @step Prepare x-end-motor
+ * @step Prepare x-end-idler
  * @step Put both together with rods.
  */

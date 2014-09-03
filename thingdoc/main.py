@@ -242,6 +242,7 @@ class ThingDoc:
 					missing.append(thing)
 				continue
 			if not thing in used:
+				print(self.tree[thing].using.keys())
 				used.append(thing)
 				queue += list(self.tree[thing].using.keys())
 			# do various alterations of items
