@@ -3,7 +3,7 @@
  *
  * @root 
  * @name RepRap
- * @using 1 frame
+ * @using 2 frame
  * @using 1 x-axis
  * @step Make sure you have [frame] ready.
  * @step Second you make the [x-axis].
