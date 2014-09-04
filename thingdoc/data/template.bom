@@ -3,7 +3,7 @@ Bill of Materials: {{ title }}
 {% for category in bom %}
 {{ category }}
 {{ (category|length) * '=' }}
-{% for id, cnt in bom[category].iteritems() -%}
+{% for id, cnt in bom[category].items() -%}
 - {{ cnt }}x {{tree[id].name}}
 {% endfor -%}
 {% endfor %}

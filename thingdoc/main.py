@@ -23,6 +23,8 @@ import re
 import shutil
 import sys
 import time
+import distutils.dir_util
+
 from jinja2 import Environment, FileSystemLoader
 from optparse import OptionParser
 
@@ -32,7 +34,7 @@ from thingdoc import version
 class Thing:
 
 	def __init__(self):
-		self.id = None          # unique id, root has id = 0 (numeric) which cannot be overriden
+		self.id = None          # unique id, root has id = 1 (numeric) which cannot be overriden
 		self.name = None        # name of the thing
 		self.common = False     # is this thing common?
 		self.assembled = False  # is this thing assembled?
@@ -94,15 +96,15 @@ class ThingDoc:
 
 
 	def warning(self, string):
-		print >> sys.stderr, 'Warning:', string
+		print('Warning:', string, file=sys.stderr)
 
 
 	def error(self, string):
-		print >> sys.stderr, 'Error:', string
+		print('Error:', string, file=sys.stderr)
 
 
 	def fatal(self, string):
-		print >> sys.stderr, 'Fatal:', string
+		print('Fatal:', string, file=sys.stderr)
 		sys.exit(1)
 
 
@@ -116,6 +118,7 @@ class ThingDoc:
 		success = True
 		thing = None
 		linenum = 0
+		isRoot = False
 		for line in f:
 			linenum += 1
 			if line.startswith('/**'):
@@ -123,6 +126,7 @@ class ThingDoc:
 					self.error('Start of the comment (/**) found but the previous one is still open (%s:%d)' % (absname, linenum))
 					success = False
 				thing = Thing()
+				isRoot = False
 				continue
 			if line.startswith(' */'):
 				if not thing:
@@ -155,15 +159,21 @@ class ThingDoc:
 				continue
 			(key, _, value) = line[3:].strip().partition(' ')
 			if   key == '@id':
-				thing.id = value
+				#id is not mandatory for root object
+				if not isRoot:
+					thing.id = value
+				else:
+					continue
 			elif key == '@name':
 				thing.name = value
 			elif key == '@root':
 				thing.id = 1
+				isRoot = True
 			elif key == '@common':
 				thing.common = True
 			elif key == '@assembled':
 				thing.assembled = True
+				thing.category = "Assembled"
 			elif key == '@since':
 				thing.since = value
 			elif key == '@category':
@@ -196,7 +206,7 @@ class ThingDoc:
 			elif key == '@weight':
 				thing.weight = float(value)
 			elif key == '@time':
-				thing.weight = float(time)
+				thing.time = float(value)
 			elif key.startswith('@'):
 				self.error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
 				success = False
@@ -219,7 +229,7 @@ class ThingDoc:
 				if self.parse_only_files is not False:			
 					if not name in self.parse_only_files:
 						continue
-				print name
+				print(name)
 				absname = os.path.join(root, name)
 				self.process_file(absname, things)
 		return things
@@ -227,7 +237,7 @@ class ThingDoc:
 
 	def check_tree(self):
 
-		if not 1 in self.tree:
+		if not filter(lambda thing: thing.id == 1, iter(self.tree.values())):
 			self.fatal('Nothing was declared as @root')
 
 		# do iterative BFS on dependency graph
@@ -236,13 +246,13 @@ class ThingDoc:
 		queue = [1]
 		while queue:
 			thing = queue.pop()
-			if not thing in self.tree.iterkeys():
+			if not thing in iter(self.tree.keys()):
 				if not thing in missing:
 					missing.append(thing)
 				continue
 			if not thing in used:
 				used.append(thing)
-				queue += self.tree[thing].using.keys()
+				queue += list(self.tree[thing].using.keys())
 			# do various alterations of items
 			if os.path.exists('%s/%s.jpg' % (self.imagedir, thing)):
 				self.tree[thing].image = '%s.jpg' % thing
@@ -250,7 +260,7 @@ class ThingDoc:
 				self.tree[thing].image = '%s.png' % thing
 
 		# handle unused things
-		for thing in self.tree.iterkeys():
+		for thing in self.tree.keys():
 			if not thing in used:
 				self.warning("Thing '%s' is defined but unused" % thing)
 
@@ -259,7 +269,7 @@ class ThingDoc:
 		# handle undefined things
 		for thing in missing:
 			parents = []
-			for k, v in self.tree.iteritems():
+			for k, v in self.tree.items():
 				if thing in v.using:
 					parents.append(k == 1 and '@root' or ("'" + k + "'"))
 			parents.sort()
@@ -267,7 +277,7 @@ class ThingDoc:
 			valid = False
 
 		# detect oriented cycles
-		todo = self.tree.keys()
+		todo = list(self.tree.keys())
 		while todo:
 			node = todo.pop()
 			stack = [node]
@@ -298,23 +308,23 @@ class ThingDoc:
 		while queue:
 			(id, cnt, level) = queue.pop(0)
 			if id == 1:
-				print '@root', '(' + self.tree[id].name + ')'
+				print('@root', '(' + self.tree[id].name + ')')
 			else:
-				print level * '  ', '-', str(cnt) + 'x', self.tree[id].id, '(' + self.tree[id].name + ')'
-			queue = map(lambda (id, cnt): (id, cnt, level + 1), self.tree[id].using.iteritems()) + queue
+				print(level * '  ', '-', str(cnt) + 'x', self.tree[id].id, '(' + self.tree[id].name + ')')
+			queue = [(id_cnt[0], id_cnt[1], level + 1) for id_cnt in iter(self.tree[id].using.items())] + queue
 
 
 	def graphviz_tree(self):
 
-		print 'digraph thingdoc {'
-		print '\tnode [style=filled, colorscheme=pastel19];'
-		print '\tedge [dir=back];'
+		print('digraph thingdoc {')
+		print('\tnode [style=filled, colorscheme=pastel19];')
+		print('\tedge [dir=back];')
 		# perform iterative DFS on tree
 		queue = [(1, 0, ['root'])]
 		while queue:
 			(id, cnt, path) = queue.pop(0)
 			if id == 1:
-				print '\t"root"[label="%s", fillcolor=9];' % self.tree[id].name
+				print('\t"root"[label="%s", fillcolor=9];' % self.tree[id].name)
 			else:
 				name = self.tree[id].name
 				if cnt > 1:
@@ -324,18 +334,18 @@ class ThingDoc:
 				elif not self.tree[id].category:
 					color = 8
 				else:
-					i = self.bom.keys().index(self.tree[id].category)
+					i = list(self.bom.keys()).index(self.tree[id].category)
 					color = (i % 6) + 2 # 2-7
-				print '\t"%s"[label="%s", fillcolor=%d];' % ('/'.join(path), name, color)
-				print '\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path))
-			queue = map(lambda (id, cnt): (id, cnt, path + [id]), self.tree[id].using.iteritems()) + queue
-		print '}'
+				print('\t"%s"[label="%s", fillcolor=%d];' % ('/'.join(path), name, color))
+				print('\t"%s" -> "%s";' % ('/'.join(path[:-1]), '/'.join(path)))
+			queue = [(id_cnt1[0], id_cnt1[1], path + [id_cnt1[0]]) for id_cnt1 in iter(self.tree[id].using.items())] + queue
+		print('}')
 
 
 	def extract_bom(self):
 
 		# perform iterative BFS on tree
-		queue = [ self.tree[1].using.items() ]
+		queue = [ list(self.tree[1].using.items()) ]
 		bom = {}
 		while queue:
 			using = queue.pop(0)
@@ -347,9 +357,8 @@ class ThingDoc:
 					else:
 						bom[thing.category][id] = cnt
 				else:
-					if thing.category:
-						bom[thing.category] = {id: cnt}
-				queue += [ map(lambda (a, b): (a, b*cnt), thing.using.items()) ]
+					bom[thing.category] = {id: cnt}
+				queue += [ [(a_b[0], a_b[1]*cnt) for a_b in list(thing.using.items())] ]
 		return bom
 
 
@@ -390,8 +399,8 @@ class ThingDoc:
 			pass
 
 		# copy static files
-		for i in ('facebox.css', 'facebox.js', 'iphone.css', 'jquery.js', 'jquery.cookie.js', 'logo.png', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
-			shutil.copy(self.datadir + i, 'html_data/' + i)
+		#for i in ('facebox.css', 'facebox.js', 'iphone.css', 'jquery.js', 'jquery.cookie.js', 'logo.png', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
+		distutils.dir_util.copy_tree(self.datadir, 'html_data/')
 
 		template = self.jinja.get_template('template.html')
 		f.write(template.render(title = self.tree[1].name, unique="153431534841", titleimg = self.tree[1].image, titledesc = self.tree[1].desc, start = self.start, tree = self.tree, bom = self.bom, instr = self.instr, imagedir = self.imagedir))
@@ -462,7 +471,7 @@ def main():
 
 	if options.lint:
 		if thingdoc.process_file(options.lint, {}):
-			print 'No syntax errors detected'
+			print('No syntax errors detected')
 			sys.exit(0)
 		else:
 			sys.exit(1)
@@ -486,7 +495,7 @@ def main():
 	if options.wiki:
 		thingdoc.generate_wiki()
 
-	print 'All Done!'
+	print('All Done!')
 
 
 if __name__ == '__main__':

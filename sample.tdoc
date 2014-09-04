@@ -1,0 +1,31 @@
+/**
+ * Printer
+ *
+ * @root 
+ * @id RepRap
+ * @name RepRap
+ * @using 2 frame
+ * @using 1 x-axis
+ * @step Make sure you have [frame] ready.
+ * @step Second you make the [x-axis].
+ */
+
+/**
+ * Printer base
+ *
+ * @id frame
+ * @name frame
+ * @assembled
+ * @step Do the side triangles.
+ * @step Connect triangles into frame.
+ */
+
+/**
+ * x axis
+ *
+ * @id x-axis
+ * @name x-axis
+ * @step Prepare x-end-motor
+ * @step Prepare x-end-idler
+ * @step Put both together with rods.
+ */
