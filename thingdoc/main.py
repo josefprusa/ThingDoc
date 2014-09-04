@@ -173,6 +173,7 @@ class ThingDoc:
 				thing.common = True
 			elif key == '@assembled':
 				thing.assembled = True
+				thing.category = "Assembled"
 			elif key == '@since':
 				thing.since = value
 			elif key == '@category':

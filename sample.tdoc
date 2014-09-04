@@ -15,6 +15,7 @@
  *
  * @id frame
  * @name frame
+ * @assembled
  * @step Do the side triangles.
  * @step Connect triangles into frame.
  */
