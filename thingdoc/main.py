@@ -23,6 +23,8 @@ import re
 import shutil
 import sys
 import time
+import distutils.dir_util
+
 from jinja2 import Environment, FileSystemLoader
 from optparse import OptionParser
 
@@ -196,7 +198,7 @@ class ThingDoc:
 			elif key == '@weight':
 				thing.weight = float(value)
 			elif key == '@time':
-				thing.weight = float(time)
+				thing.time = float(value)
 			elif key.startswith('@'):
 				self.error('Unknown tag %s (%s:%d)' % (key, absname, linenum))
 				success = False
@@ -389,8 +391,8 @@ class ThingDoc:
 			pass
 
 		# copy static files
-		for i in ('facebox.css', 'facebox.js', 'iphone.css', 'jquery.js', 'jquery.cookie.js', 'logo.png', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
-			shutil.copy(self.datadir + i, 'html_data/' + i)
+		#for i in ('facebox.css', 'facebox.js', 'iphone.css', 'jquery.js', 'jquery.cookie.js', 'logo.png', 'logo120.png', 'thingdoc.css', 'thingdoc.js'):
+		distutils.dir_util.copy_tree(self.datadir, 'html_data/')
 
 		template = self.jinja.get_template('template.html')
 		f.write(template.render(title = self.tree[1].name, unique="153431534841", titleimg = self.tree[1].image, titledesc = self.tree[1].desc, start = self.start, tree = self.tree, bom = self.bom, instr = self.instr, imagedir = self.imagedir))
