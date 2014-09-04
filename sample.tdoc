@@ -2,6 +2,7 @@
  * Printer
  *
  * @root 
+ * @id RepRap
  * @name RepRap
  * @using 2 frame
  * @using 1 x-axis

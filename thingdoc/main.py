@@ -118,6 +118,7 @@ class ThingDoc:
 		success = True
 		thing = None
 		linenum = 0
+		isRoot = False
 		for line in f:
 			linenum += 1
 			if line.startswith('/**'):
@@ -125,6 +126,7 @@ class ThingDoc:
 					self.error('Start of the comment (/**) found but the previous one is still open (%s:%d)' % (absname, linenum))
 					success = False
 				thing = Thing()
+				isRoot = False
 				continue
 			if line.startswith(' */'):
 				if not thing:
@@ -157,11 +159,16 @@ class ThingDoc:
 				continue
 			(key, _, value) = line[3:].strip().partition(' ')
 			if   key == '@id':
-				thing.id = value
+				#id is not mandatory for root object
+				if not isRoot:
+					thing.id = value
+				else:
+					continue
 			elif key == '@name':
 				thing.name = value
 			elif key == '@root':
 				thing.id = 1
+				isRoot = True
 			elif key == '@common':
 				thing.common = True
 			elif key == '@assembled':
